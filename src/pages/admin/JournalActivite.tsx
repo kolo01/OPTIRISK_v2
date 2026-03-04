@@ -1,0 +1,170 @@
+// src/pages/admin/JournalActivite.tsx
+import React, { useState } from 'react';
+import { Download, Calendar } from 'lucide-react';
+import SearchBar from '../../components/admin/SearchBar';
+import Pagination from '../../components/admin/Pagination';
+
+export interface LogEntry {
+  id: string;
+  date: string;
+  utilisateur: string;
+  email: string;
+  action: 'CONNEXION' | 'DECONNEXION' | 'SUSPENSION' | 'REACTIVATION' | 'SUPPRESSION';
+  details: string;
+  ip: string;
+  statut: 'SUCCES' | 'ECHEC';
+}
+
+const JournalActivite: React.FC = () => {
+  const [logs] = useState<LogEntry[]>([]); // Tableau vide
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [actionFilter, setActionFilter] = useState<string>('TOUS');
+  const [statutFilter, setStatutFilter] = useState<string>('TOUS');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
+  const handleExport = () => {
+    console.log('Export des logs');
+  };
+
+  const getActionLabel = (action: LogEntry['action']) => {
+    const labels: Record<LogEntry['action'], string> = {
+      CONNEXION: 'Connexion',
+      DECONNEXION: 'Déconnexion',
+      SUSPENSION: 'Suspension',
+      REACTIVATION: 'Réactivation',
+      SUPPRESSION: 'Suppression'
+    };
+    return labels[action];
+  };
+
+  const getStatutBadge = (statut: LogEntry['statut']) => {
+    switch (statut) {
+      case 'SUCCES':
+        return <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Succès</span>;
+      case 'ECHEC':
+        return <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">Échec</span>;
+    }
+  };
+
+  const filteredLogs = logs.filter(log => {
+    const matchesSearch = log.utilisateur.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         log.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesAction = actionFilter === 'TOUS' || log.action === actionFilter;
+    const matchesStatut = statutFilter === 'TOUS' || log.statut === statutFilter;
+    const matchesDate = !dateFilter || log.date.startsWith(dateFilter);
+    return matchesSearch && matchesAction && matchesStatut && matchesDate;
+  });
+
+  const paginatedLogs = filteredLogs.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-900">Journal d'activité</h1>
+        <button
+          onClick={handleExport}
+          className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:opacity-90"
+        >
+          <Download className="w-4 h-4" />
+          <span>Exporter</span>
+        </button>
+      </div>
+
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <SearchBar 
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Rechercher..."
+          />
+
+          <div className="relative">
+            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+
+          <select
+            value={actionFilter}
+            onChange={(e) => setActionFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg"
+          >
+            <option value="TOUS">Toutes les actions</option>
+            <option value="CONNEXION">Connexions</option>
+            <option value="SUSPENSION">Suspensions</option>
+            <option value="REACTIVATION">Réactivations</option>
+            <option value="SUPPRESSION">Suppressions</option>
+          </select>
+
+          <select
+            value={statutFilter}
+            onChange={(e) => setStatutFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg"
+          >
+            <option value="TOUS">Tous les statuts</option>
+            <option value="SUCCES">Succès</option>
+            <option value="ECHEC">Échec</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg border border-gray-200">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Utilisateur</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Détails</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {paginatedLogs.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                    Aucune activité enregistrée
+                  </td>
+                </tr>
+              ) : (
+                paginatedLogs.map((log) => (
+                  <tr key={log.id}>
+                    <td className="px-6 py-4 text-sm text-gray-600">{log.date}</td>
+                    <td className="px-6 py-4">
+                      <p className="font-medium text-gray-900">{log.utilisateur}</p>
+                      <p className="text-sm text-gray-500">{log.email}</p>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{getActionLabel(log.action)}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{log.details}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{log.ip}</td>
+                    <td className="px-6 py-4">{getStatutBadge(log.statut)}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredLogs.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default JournalActivite;
