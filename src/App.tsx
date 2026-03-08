@@ -1,35 +1,46 @@
-import { Route, Routes, Outlet } from 'react-router-dom'
-import LoginPage from './pages/Login'
-import Inscription from './pages/Inscription'
-import ResetPassword from './pages/ResetPassword'
-import ForgotPassword from './pages/ForgotPassword'
-import ChangePassword from './pages/ChangePassword'
-import SetupMFA from './pages/SetupMFA'
-import ProfileTab from './pages/ProfileTab'
-import RapportsPage from './pages/RapportsPage'
-import TokenWarning from './pages/TokenWarning'
-import EmailVerificationSuccess from './pages/EmailVerificationSuccess'
-import AnalysisTab from './components/Analysis/AnalysisTab'
+import { Route, Routes, Outlet } from "react-router-dom";
+import LoginPage from "./pages/Login";
+import Inscription from "./pages/Inscription";
+import ResetPassword from "./pages/ResetPassword";
+import ForgotPassword from "./pages/ForgotPassword";
+import ChangePassword from "./pages/ChangePassword";
+import SetupMFA from "./pages/SetupMFA";
+import ProfileTab from "./pages/ProfileTab";
+import RapportsPage from "./pages/RapportsPage";
+import TokenWarning from "./pages/TokenWarning";
+import EmailVerificationSuccess from "./pages/EmailVerificationSuccess";
+import AnalysisTab from "./components/Analysis/AnalysisTab";
 // Import des pages ADMIN
-import DashboardAdmin from './pages/admin/DashboardAdmin'
-import UtilisateursActifs from './pages/admin/UtilisateursActifs'
-import JournalActivite from './pages/admin/JournalActivite'
-
+import DashboardAdmin from "./pages/admin/DashboardAdmin";
+import UtilisateursActifs from "./pages/admin/UtilisateursActifs";
+import JournalActivite from "./pages/admin/JournalActivite";
 
 // Import du layout
-import Layout from './components/layouts/Index';
-import Dashboard from './pages/Dashboard'
-import AnalysesTableau from './components/Analysis/analysesTables'
+import Layout from "./components/layouts/Index";
+import Dashboard from "./pages/Dashboard";
+import AnalysesTableau from "./components/Analysis/analysesTables";
+import EditAnalysis from "./components/Analysis/EditAnalysis";
+import ShowAnalysis from "./components/Analysis/showAnalyse";
+import AdminGuard from "./guards/AdminGuard";
 
 function App() {
   return (
     <Routes>
       {/* Routes ADMIN avec Layout */}
-      <Route path="/admin" element={<Layout><Outlet /></Layout>}>
-        <Route index element={<DashboardAdmin />} />
-        <Route path="/admin/dashboard" element={<DashboardAdmin />} />
-        <Route path="/admin/utilisateurs" element={<UtilisateursActifs />} />
-        <Route path="/admin/journal" element={<JournalActivite />} />
+      <Route
+        path="/admin"
+        element={
+          <AdminGuard>
+          <Layout>
+            <Outlet />
+          </Layout>
+          </AdminGuard>
+        }
+      >
+        <Route index element={<AdminGuard><DashboardAdmin /></AdminGuard>} />
+        <Route path="/admin/dashboard" element={<AdminGuard><DashboardAdmin /></AdminGuard>} />
+        <Route path="/admin/utilisateurs" element={<AdminGuard><UtilisateursActifs /></AdminGuard>} />
+        <Route path="/admin/journal" element={<AdminGuard><JournalActivite /></AdminGuard>} />
       </Route>
 
       {/* Routes sans layout (pages d'authentification) */}
@@ -40,48 +51,77 @@ function App() {
       <Route path="/change-password" element={<ChangePassword />} />
       <Route path="/setup-mfa" element={<SetupMFA />} />
       <Route path="/token-warning" element={<TokenWarning />} />
-      
+
       <Route path="/activate-account" element={<EmailVerificationSuccess />} />
 
+      {/* Dashboard/Accueil */}
 
-        {/* Dashboard/Accueil */}
+      {/* Pages principales */}
 
-        {/* Pages principales */}
-
-        <Route path="/analysis-tab" element={
+      <Route
+        path="/analysis-tab"
+        element={
           <Layout>
             <AnalysisTab />
           </Layout>
-          } />
+        }
+      />
 
-           <Route path="/analysis" element={
+      <Route
+        path="/edit-analysis-tab/:slug"
+        element={
+          <Layout>
+            <EditAnalysis/>
+          </Layout>
+        }
+      />
+      <Route
+        path="/showanalysis/:slug"
+        element={
+          <Layout>
+            <ShowAnalysis />
+          </Layout>
+        }
+      />
+
+      <Route
+        path="/analysis"
+        element={
           <Layout>
             <AnalysesTableau />
           </Layout>
-          } />
+        }
+      />
 
-        <Route path="/rapports-page" element={
+      <Route
+        path="/rapports-page"
+        element={
           <Layout>
-                <RapportsPage />
-              </Layout>
-              } />
-        
+            <RapportsPage />
+          </Layout>
+        }
+      />
 
-        {/* Profil et paramètres */}
-        
-        <Route path="/profil" element={
+      {/* Profil et paramètres */}
+
+      <Route
+        path="/profil"
+        element={
           <Layout>
             <ProfileTab />
           </Layout>
-        } />
-        <Route path="/dashboard" element={
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
           <Layout>
             <Dashboard />
           </Layout>
-        } />
-
+        }
+      />
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;

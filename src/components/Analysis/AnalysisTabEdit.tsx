@@ -20,9 +20,20 @@ import Atelier4 from "./Atelier4";
 import Atelier5 from "./Atelier5";
 import { objectifsVisesParDefaut } from "../../data/sourcesRisqueData";
 import analysisService from "../../services/analysisService";
-import { useNavigate } from "react-router-dom";
 
-const AnalysisTab: React.FC = () => {
+const AnalysisTabEdit: React.FC = () => {
+  // Récupération de selectedAnalysis depuis sessionStorage
+  React.useEffect(() => {
+    const storedAnalysis = sessionStorage.getItem('selectedAnalysis');
+    if (storedAnalysis) {
+      const parsedAnalysis = JSON.parse(storedAnalysis);
+      analysisService.getOneAnalyse(parsedAnalysis.slug).then((res) => {
+        console.log(res.data);
+        setAnalysisData(res.data);
+        setSlug(res.data.slug);
+      });
+    }
+  }, []);
   // Fonctions de navigation
   const onNavigateToReports = () => {
     console.log("Navigation vers rapports");
@@ -178,8 +189,6 @@ const AnalysisTab: React.FC = () => {
       setSlug(response.data.slug);
       // return { ...data, id: "temp-" + Date.now() };
       setCurrentWorkshop(currentWorkshop + 1);
-      addNotification('Analyse créée avec succès\n, passage à l\'atelier 1', 'success');
-      return [...data, { id: response.data.id }];
     },
     updateAnalysis: async (id: string, data: any) => {
       console.log("Mise à jour analyse:", id, data);
@@ -236,7 +245,6 @@ const AnalysisTab: React.FC = () => {
     updateAnalysts(newAnalysts);
   };
 
-  const navigate= useNavigate();
   const handleNext = () => {
     if (currentWorkshop < 5) {
       analysisData.id = currentWorkshop.toString();
@@ -262,11 +270,11 @@ const AnalysisTab: React.FC = () => {
   if(currentWorkshop === 5){
     analysisService.analyseWorkshop(slug, analysisData.workshop5, currentWorkshop)
     addNotification(`Atelier 5 terminé. Analyse complète!`, "success");
-    navigate("/analysis")
+  
   }
 }
   const handlePrevious = () => {
-    if (currentWorkshop > 0) {
+    if (currentWorkshop > 1) {
       setCurrentWorkshop(currentWorkshop - 1);
     }
   };
@@ -329,7 +337,8 @@ const AnalysisTab: React.FC = () => {
         organization: analysisData.organization,
         analysts: analysisData.analysts, 
         context: analysisData.workshop1.config.contexte,
-        type: analysisData.type
+        type: analysisData.type,
+        user: user.id,
       }).then((result:any) => {
         if (result) {
           setAnalysisData(result);
@@ -773,18 +782,18 @@ const AnalysisTab: React.FC = () => {
             <div className="flex items-center space-x-4">
               <button
                 onClick={handlePrevious}
-                disabled={currentWorkshop === 0}
+                disabled={currentWorkshop === 1}
                 className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 ← Précédent
               </button>
 
-              {/* <button
+              <button
                 onClick={validateCurrentWorkshop}
                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2"
               >
                 <span>Valider cet atelier</span>
-              </button> */}
+              </button>
             </div>
 
             <div className="flex items-center space-x-4">
@@ -801,7 +810,7 @@ const AnalysisTab: React.FC = () => {
                 </span>
                 <button
                   onClick={handleNext}
-                  disabled={currentWorkshop > 6 }
+                  disabled={currentWorkshop >= 5 }
                   className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
                   <span>
@@ -820,13 +829,13 @@ const AnalysisTab: React.FC = () => {
         <p>
           Méthode EBIOS Risk Manager - ANSSI • Version 1.1 •
           <span className="mx-2">|</span>
-          Dernière sauvegarde : {analysisData?.updatedAt ? analysisData?.updatedAt?.toLocaleTimeString() : 'N/A'}
+          Dernière sauvegarde : {analysisData.updatedAt.toLocaleTimeString()}
           <span className="mx-2">|</span>
-          Statut : <span className="text-blue-400">{analysisData?.status}</span>
+          Statut : <span className="text-blue-400">{analysisData.status}</span>
         </p>
       </div>
     </div>
   );
 };
 
-export default AnalysisTab;
+export default AnalysisTabEdit;

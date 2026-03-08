@@ -59,13 +59,7 @@ const Atelier1: React.FC<Atelier1Props> = ({ analysisData, updateAnalysisData })
     menaces: ''
   });
 
-  // Suggestions de titre par type d'analyse
-  const titreSuggestions = {
-    'Nouveau projet': 'Analyse sécurité projet [Nom du Projet]',
-    'Changement majeur': 'Réévaluation risques modification [Système/Processus]',
-    'Revue annuelle': 'Revue annuelle sécurité [Année] - [Organisation]',
-    'Analyse générale IT': 'Audit sécurité IT global [Organisation]'
-  };
+ 
 
   // Fonction simple de notification
   const addNotification = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
@@ -308,14 +302,14 @@ const Atelier1: React.FC<Atelier1Props> = ({ analysisData, updateAnalysisData })
       </div>
 
       {/* Section 1 : Type d'analyse et titre */}
-      <div className="ebios-card">
+      {/* <div className="ebios-card">
         <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center">
           <ListChecks className="w-5 h-5 mr-2 text-blue-400" />
           1. Type d'analyse et Titre
         </h3>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Type d'analyse */}
+          
           <div>
             <label className="block text-sm font-medium text-slate-200 mb-2">
               Type d'analyse *
@@ -339,7 +333,7 @@ const Atelier1: React.FC<Atelier1Props> = ({ analysisData, updateAnalysisData })
             </div>
           </div>
 
-          {/* Titre de l'analyse */}
+          
           <div>
             <label className="block text-sm font-medium text-slate-200 mb-2">
               Titre de l'analyse *
@@ -356,10 +350,10 @@ const Atelier1: React.FC<Atelier1Props> = ({ analysisData, updateAnalysisData })
             </p>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Section 2 : Contexte professionnel */}
-      <div className="ebios-card">
+      {/* <div className="ebios-card">
         <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center">
           <Building2 className="w-5 h-5 mr-2 text-blue-400" />
           2. Contexte professionnel
@@ -407,13 +401,13 @@ const Atelier1: React.FC<Atelier1Props> = ({ analysisData, updateAnalysisData })
             </div>
           )}
         </div>
-      </div>
+      </div> */}
 
       {/* Section 3 : Standard de sécurité */}
       <div className="ebios-card">
         <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center">
           <Shield className="w-5 h-5 mr-2 text-green-400" />
-          3. Socle et Standard de sécurité
+          1. Socle et Standard de sécurité
         </h3>
         
         <div className="mb-6">
@@ -528,10 +522,19 @@ const Atelier1: React.FC<Atelier1Props> = ({ analysisData, updateAnalysisData })
 
       {/* Section 4 : Analyse SWOT */}
       <div className="ebios-card">
+       <div className='flex justify-between mb-4 align-center  items-center'> 
         <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center">
           <BarChart3 className="w-5 h-5 mr-2 text-purple-400" />
-          4. Analyse SWOT préliminaire
+          2. Analyse SWOT préliminaire
         </h3>
+         <button
+            onClick={handleGenerateAI}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+          >
+            <Zap className="w-4 h-4" />
+            <span>Générer avec IA</span>
+          </button>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Forces et Faiblesses */}
@@ -690,7 +693,7 @@ const Atelier1: React.FC<Atelier1Props> = ({ analysisData, updateAnalysisData })
       <div className="ebios-card">
         <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center">
           <Target className="w-5 h-5 mr-2 text-indigo-400" />
-          5. Missions et Valeurs métier
+          3. Missions et Valeurs métier
         </h3>
         
         <div className="mb-6">
@@ -838,7 +841,7 @@ const Atelier1: React.FC<Atelier1Props> = ({ analysisData, updateAnalysisData })
       <div className="ebios-card">
         <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center">
           <ListChecks className="w-5 h-5 mr-2 text-slate-400" />
-          6. Périmètre et Événements redoutés
+          4. Périmètre et Événements redoutés
         </h3>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

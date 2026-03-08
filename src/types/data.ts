@@ -266,6 +266,7 @@ export interface Analysis {
   organization: string;
   analysts: string[];
   status: string;
+  type: TypeAnalyse;
   userId: string;
   createdAt: Date;
   updatedAt: Date;

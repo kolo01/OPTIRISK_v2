@@ -17,7 +17,7 @@ export interface User {
 }
 
 interface UserTableProps {
-  users: User[];
+  users: any[];
   onView: (id: string) => void;
   onValidate?: (id: string) => void;
   onReject?: (id: string) => void;
@@ -85,9 +85,6 @@ const UserTable: React.FC<UserTableProps> = ({
                   Entreprise
                 </th>
               )}
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Inscription
-              </th>
               {showDerniereConnexion && (
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Dernière connexion
@@ -133,7 +130,7 @@ const UserTable: React.FC<UserTableProps> = ({
                   </td>
                   {showEntreprise && (
                     <td className="px-6 py-4 text-gray-600">
-                      {user.entreprise || '-'}
+                      {user.company_name || '-'}
                     </td>
                   )}
                   <td className="px-6 py-4 text-gray-600">
@@ -141,13 +138,13 @@ const UserTable: React.FC<UserTableProps> = ({
                   </td>
                   {showDerniereConnexion && (
                     <td className="px-6 py-4 text-gray-600">
-                      {user.derniereConnexion || '-'}
+                      {user.last_login || '-'}
                     </td>
                   )}
                   {showAnalyses && (
                     <td className="px-6 py-4">
                       <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                        {user.nbAnalyses || 0}
+                        {user.analyses_number || 0}
                       </span>
                     </td>
                   )}

@@ -51,6 +51,10 @@ const LoginPage: React.FC = () => {
       if (response.success) {
         toast.success(`Connexion réussie !, Bon retour ${response.data.first_name} ${response.data.last_name}.`);
         localStorage.setItem('optirisk_user', JSON.stringify(response.data));
+        if (response.data.role === 'admin') {
+          navigate('/admin');
+          return;
+        }
         navigate('/dashboard');
         return;
       }

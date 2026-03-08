@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { data, Link } from 'react-router-dom';
 import { 
   BarChart3, 
   FileText, 
@@ -23,6 +23,7 @@ import {
   PieChart,
   LineChart
 } from 'lucide-react';
+import StatsService from '../services/adminService/statsServices';
 
 const Dashboard: React.FC = () => {
   // TODO: Remplacer par vos vraies données
@@ -30,6 +31,25 @@ const Dashboard: React.FC = () => {
   // const recentRisks = vosDonneesAPI.risks;
   // const activeAnalyses = vosDonneesAPI.analyses;
   // const recentReports = vosDonneesAPI.reports;
+
+  const [stats, setStats] = React.useState<any>(null);
+
+  const fetchData = async () => {
+     await StatsService.getStats()
+      .then((response) => {
+        if (response?.success) {
+          setStats(response.data);
+        } else {
+          console.error("Erreur lors de la récupération des statistiques");
+        }
+      })
+      .catch((error) => {
+        console.error("Erreur lors de la récupération des statistiques", error);
+      }); 
+  };
+  useEffect(() => {
+    fetchData();  
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -56,26 +76,26 @@ const Dashboard: React.FC = () => {
       {/* Statistiques principales - Placeholders */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: 'Analyses actives', icon: BarChart3, color: 'bg-blue-500' },
-          { label: 'Risques identifiés', icon: Shield, color: 'bg-orange-500' },
-          { label: 'Rapports générés', icon: FileText, color: 'bg-green-500' },
-          { label: 'Taux de résolution', icon: TrendingUp, color: 'bg-purple-500' },
+          { label: 'Analyses actives', icon: BarChart3, color: 'bg-blue-500', data: stats?.analyses?.total || 0 },
+          { label: 'Risques identifiés', icon: Shield, color: 'bg-orange-500', data: stats?.analyses?.draft || 0 },
+          { label: 'Rapports générés', icon: FileText, color: 'bg-green-500', data: stats?.analyses?.in_progress || 0 },
+          { label: 'Taux de résolution', icon: TrendingUp, color: 'bg-purple-500', data: stats?.analyses?.completed || 0 },
         ].map((stat, index) => (
           <div key={index} className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">{stat.label}</p>
-                <p className="text-2xl font-bold text-gray-900 mt-2">--</p>
+                <p className="text-2xl font-bold text-gray-900 mt-2">{stat.data}</p>
               </div>
               <div className={`p-3 rounded-xl ${stat.color} text-white`}>
                 <stat.icon className="h-6 w-6" />
               </div>
             </div>
-            <div className="mt-4 pt-4 border-t border-gray-100">
+            {/* <div className="mt-4 pt-4 border-t border-gray-100">
               <div className="text-sm text-gray-500">
                 Données à charger...
               </div>
-            </div>
+            </div> */}
           </div>
         ))}
       </div>
@@ -153,8 +173,25 @@ const Dashboard: React.FC = () => {
             </button>
           </div>
         </div>
-        
-        <div className="text-center py-12">
+        {
+          stats?.recent_analyses && stats.recent_analyses.length > 0 ? (
+            <ul className="space-y-4">
+              {stats.recent_analyses.map((risk: any, index: number) => (  
+                <li key={index} className="flex items-center space-x-4">
+                  <div className="p-3 rounded-lg bg-red-500 text-white">
+                    <AlertTriangle className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{risk.title}</p>
+                    <p className="text-sm text-gray-500">{risk.organization}</p>
+                    <p className="text-sm text-gray-500">{risk.status}</p>
+                    <p className="text-sm text-gray-500">{risk.progress}%</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-center py-12">
           <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun risque Identifié</h3>
           <p className="text-gray-600 mb-4">
@@ -168,6 +205,9 @@ const Dashboard: React.FC = () => {
             Voir la page d'analyse
           </Link>
         </div>
+          )}
+          
+        
       </div>
 
       {/* Section droite - Rapports récents */}

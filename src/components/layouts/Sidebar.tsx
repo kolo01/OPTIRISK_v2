@@ -33,7 +33,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, setIsCollapsed }) => {
       icon: <LayoutDashboard size={20} />,
     },
     {
-      path: '/analysis-tab',
+      path: '/analysis',
       label: 'ANALYSES',
       icon: <BarChart3 size={20} />,
     },

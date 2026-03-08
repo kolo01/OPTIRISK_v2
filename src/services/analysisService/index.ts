@@ -25,10 +25,10 @@ const updateAnalyse = async (slug: string, data: any) => {
   return response.data;
 };
 
-const analyseWorkshop = async (slug: string, data: any) => {
-  const response = await apiClient.delete(
+const analyseWorkshop = async (slug: string, data: any,workshop:any) => {
+  const response = await apiClient.patch(
     `/analyses/${slug}/update-workshop/`,
-    data,
+    {data: data, workshop: workshop},
   );
   return response.data;
 };
