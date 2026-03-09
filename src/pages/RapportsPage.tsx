@@ -250,9 +250,9 @@ const RapportsPage = () => {
 
       const data = await StatsService.getUsersReports();
       console.log("data", data.data);
-      setRapports(data.data.recent_analyses);
+      setRapports(data.data);
       setRapportsStats(data.data);
-      setTotal(data.data.analyses.total);
+      setTotal(data.data.length);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur de chargement");
       console.error("Erreur:", err);
