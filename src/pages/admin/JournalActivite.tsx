@@ -1,67 +1,103 @@
 // src/pages/admin/JournalActivite.tsx
-import React, { useState } from 'react';
-import { Download, Calendar } from 'lucide-react';
-import SearchBar from '../../components/admin/SearchBar';
-import Pagination from '../../components/admin/Pagination';
+import React, { useEffect, useState } from "react";
+import { Download, Calendar } from "lucide-react";
+import SearchBar from "../../components/admin/SearchBar";
+import Pagination from "../../components/admin/Pagination";
+import journalService from "../../services/adminService/journalService";
 
 export interface LogEntry {
   id: string;
   date: string;
   utilisateur: string;
   email: string;
-  action: 'CONNEXION' | 'DECONNEXION' | 'SUSPENSION' | 'REACTIVATION' | 'SUPPRESSION';
+  action:
+    | "CONNEXION"
+    | "DECONNEXION"
+    | "SUSPENSION"
+    | "REACTIVATION"
+    | "SUPPRESSION";
   details: string;
   ip: string;
-  statut: 'SUCCES' | 'ECHEC';
+  statut: "SUCCES" | "ECHEC";
 }
 
 const JournalActivite: React.FC = () => {
-  const [logs] = useState<LogEntry[]>([]); // Tableau vide
-  const [searchTerm, setSearchTerm] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
-  const [actionFilter, setActionFilter] = useState<string>('TOUS');
-  const [statutFilter, setStatutFilter] = useState<string>('TOUS');
+  const [logs, setLogs] = useState<any[]>([]); // Tableau vide
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+  const [actionFilter, setActionFilter] = useState<string>("TOUS");
+  const [statutFilter, setStatutFilter] = useState<string>("TOUS");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
   const handleExport = () => {
-    console.log('Export des logs');
+    console.log("Export des logs");
   };
 
-  const getActionLabel = (action: LogEntry['action']) => {
-    const labels: Record<LogEntry['action'], string> = {
-      CONNEXION: 'Connexion',
-      DECONNEXION: 'Déconnexion',
-      SUSPENSION: 'Suspension',
-      REACTIVATION: 'Réactivation',
-      SUPPRESSION: 'Suppression'
+  const getActionLabel = (action: any["action"]) => {
+    const labels: Record<any["action"], string> = {
+      CONNEXION: "Connexion",
+      DECONNEXION: "Déconnexion",
+      SUSPENSION: "Suspension",
+      REACTIVATION: "Réactivation",
+      SUPPRESSION: "Suppression",
+      INFO: "Info",
     };
     return labels[action];
   };
 
-  const getStatutBadge = (statut: LogEntry['statut']) => {
+  const getStatutBadge = (statut: LogEntry["statut"]) => {
     switch (statut) {
-      case 'SUCCES':
-        return <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Succès</span>;
-      case 'ECHEC':
-        return <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">Échec</span>;
+      case "SUCCES":
+        return (
+          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+            Succès
+          </span>
+        );
+      case "ECHEC":
+        return (
+          <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
+            Échec
+          </span>
+        );
     }
   };
 
-  const filteredLogs = logs.filter(log => {
-    const matchesSearch = log.utilisateur.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         log.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesAction = actionFilter === 'TOUS' || log.action === actionFilter;
-    const matchesStatut = statutFilter === 'TOUS' || log.statut === statutFilter;
+  const filteredLogs = logs.filter((log) => {
+    const matchesSearch =
+      log?.utilisateur?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log?.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesAction =
+      actionFilter === "TOUS" || log.action === actionFilter;
+    const matchesStatut =
+      statutFilter === "TOUS" || log.status === statutFilter;
     const matchesDate = !dateFilter || log.date.startsWith(dateFilter);
     return matchesSearch && matchesAction && matchesStatut && matchesDate;
   });
 
-  const paginatedLogs = filteredLogs.slice(
+  const paginatedLogs = logs.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
+  const fetchLogs = async () => {
+    const logs = await journalService.getLogs();
+    console.log("logs", logs);
+    setLogs(logs.data);
+  };
+
+  useEffect(() => {
+    fetchLogs();
+  }, []);
+
+  const formatDate = (date: string) => {
+    const d = new Date(date);
+    return d.toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  };
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -77,7 +113,7 @@ const JournalActivite: React.FC = () => {
 
       <div className="bg-white rounded-lg border border-gray-200 p-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <SearchBar 
+          <SearchBar
             value={searchTerm}
             onChange={setSearchTerm}
             placeholder="Rechercher..."
@@ -122,33 +158,62 @@ const JournalActivite: React.FC = () => {
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Utilisateur</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Détails</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Statut</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Date
+                </th>
+                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Utilisateur
+                </th> */}
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Action
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Détails
+                </th>
+                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  IP
+                </th> */}
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Statut
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {paginatedLogs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                  <td
+                    colSpan={6}
+                    className="px-6 py-8 text-center text-gray-500"
+                  >
                     Aucune activité enregistrée
                   </td>
                 </tr>
               ) : (
                 paginatedLogs.map((log) => (
                   <tr key={log.id}>
-                    <td className="px-6 py-4 text-sm text-gray-600">{log.date}</td>
-                    <td className="px-6 py-4">
-                      <p className="font-medium text-gray-900">{log.utilisateur}</p>
-                      <p className="text-sm text-gray-500">{log.email}</p>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {formatDate(log.created_at)}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{getActionLabel(log.action)}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{log.details}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{log.ip}</td>
-                    <td className="px-6 py-4">{getStatutBadge(log.statut)}</td>
+                    <td className="px-6 py-4">
+                      <p className="font-medium text-gray-900">
+                        {log?.message}
+                      </p>
+                      <p className="text-sm text-gray-500">{log?.email}</p>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {getActionLabel(log?.level)}
+                    </td>
+                    {/* <td className="px-6 py-4 text-sm text-gray-600">
+                      {formatDate(log.created_at)}
+                    </td> */}
+                    {/* <td className="px-6 py-4 text-sm text-gray-600">
+                      {log.ip}
+                    </td> */}
+                    <td className="px-6 py-4">
+                      {getStatutBadge(
+                        log.status == "true" ? "SUCCES" : "ECHEC",
+                      )}
+                    </td>
                   </tr>
                 ))
               )}
