@@ -41,8 +41,8 @@ const UserTable: React.FC<UserTableProps> = ({
   onReactivate,
   onDelete,
   showActions = true,
-  showStatus = true,
-  showRole = false,
+  showStatus = false,
+  showRole = true,
   showEntreprise = true,
   showAnalyses = false,
   showDerniereConnexion = false
@@ -133,9 +133,7 @@ const UserTable: React.FC<UserTableProps> = ({
                       {user.company_name || '-'}
                     </td>
                   )}
-                  <td className="px-6 py-4 text-gray-600">
-                    {user.dateInscription}
-                  </td>
+                   
                   {showDerniereConnexion && (
                     <td className="px-6 py-4 text-gray-600">
                       {user.last_login || '-'}

@@ -1,5 +1,6 @@
 import { Route, Routes, Outlet } from "react-router-dom";
 import LoginPage from "./pages/Login";
+import AuthenticatedGuard from "./guards/AuthenticatedGuard";
 import Inscription from "./pages/Inscription";
 import ResetPassword from "./pages/ResetPassword";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -13,6 +14,7 @@ import AnalysisTab from "./components/Analysis/AnalysisTab";
 // Import des pages ADMIN
 import DashboardAdmin from "./pages/admin/DashboardAdmin";
 import UtilisateursActifs from "./pages/admin/UtilisateursActifs";
+import UserDetailPage from "./pages/admin/UserDetail";
 import JournalActivite from "./pages/admin/JournalActivite";
 
 // Import du layout
@@ -40,11 +42,12 @@ function App() {
         <Route index element={<AdminGuard><DashboardAdmin /></AdminGuard>} />
         <Route path="/admin/dashboard" element={<AdminGuard><DashboardAdmin /></AdminGuard>} />
         <Route path="/admin/utilisateurs" element={<AdminGuard><UtilisateursActifs /></AdminGuard>} />
+        <Route path="/admin/utilisateurs/:slug" element={<AdminGuard><UserDetailPage /></AdminGuard>} />
         <Route path="/admin/journal" element={<AdminGuard><JournalActivite /></AdminGuard>} />
       </Route>
 
       {/* Routes sans layout (pages d'authentification) */}
-      <Route path="/" element={<LoginPage />} />
+      <Route path="/" element={<AuthenticatedGuard><LoginPage /></AuthenticatedGuard>} />
       <Route path="/inscription" element={<Inscription />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />

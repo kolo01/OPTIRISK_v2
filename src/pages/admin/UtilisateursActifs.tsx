@@ -1,13 +1,41 @@
 // src/pages/admin/UtilisateursActifs.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Filter } from 'lucide-react';
 import UserTable, { type User } from '../../components/admin/UserTable';
+import apiClient from '../../services/apiservice';
 import ValidationModal from '../../components/admin/ValidationModal';
 import SearchBar from '../../components/admin/SearchBar';
 import Pagination from '../../components/admin/Pagination';
 
 const UtilisateursActifs: React.FC = () => {
-  const [users] = useState<User[]>([]); // Tableau vide
+  const [users, setUsers] = useState<User[]>([]);
+  const navigate = useNavigate();
+    // Récupération des utilisateurs à l'initialisation
+    useEffect(() => {
+      const fetchUsers = async () => {
+        try {
+          const response = await apiClient.get('/users/');
+          // Nouvelle structure : les utilisateurs sont dans response.data.data
+          const apiUsers = (response.data.data || []).map((u: any) => ({
+            id: u.slug || u.email,
+            nom: `${u.first_name || ''} ${u.last_name || ''}`.trim(),
+            email: u.email,
+            entreprise: u.company_name || 'N/A',
+            dateInscription: u.created_at ? new Date(u.created_at).toLocaleDateString() : 'N/A',
+            derniereConnexion: u.last_login ? new Date(u.last_login).toLocaleString() : 'N/A',
+            nbAnalyses: u.analyses_number || 0,
+            statut: u.status === true ? 'ACTIF' : 'SUSPENDU',
+            role: (u.role || 'USER').toUpperCase(),
+            is2FA: !!u.is_2fa_enabled,
+          }));
+          setUsers(apiUsers);
+        } catch (error) {
+          console.error('Erreur lors de la récupération des utilisateurs', error);
+        }
+      };
+      fetchUsers();
+    }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [statutFilter, setStatutFilter] = useState<'TOUS' | 'ACTIF' | 'SUSPENDU'>('TOUS');
   const [currentPage, setCurrentPage] = useState(1);
@@ -28,10 +56,10 @@ const UtilisateursActifs: React.FC = () => {
   const itemsPerPage = 10;
 
   // Filtrage (ne retournera rien)
-  const filteredUsers = users.filter(user => {
+  const filteredUsers = users.filter((user:any) => {
     const matchesSearch = user.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatut = statutFilter === 'TOUS' || user.statut === statutFilter;
+    const matchesStatut = statutFilter === 'TOUS' || user.status === statutFilter;
     return matchesSearch && matchesStatut;
   });
 
@@ -41,7 +69,10 @@ const UtilisateursActifs: React.FC = () => {
   );
 
   const handleView = (id: string) => {
-    console.log('Voir détails:', id);
+    const user = users.find(u => u.id === id);
+    if (user) {
+      navigate(`/admin/utilisateurs/${id}`, { state: { user } });
+    }
   };
 
   const handleSuspend = (id: string) => {
@@ -83,8 +114,19 @@ const UtilisateursActifs: React.FC = () => {
     }
   };
 
-  const confirmAction = () => {
-    console.log(`${modalConfig.type} confirmé pour:`, modalConfig.userId);
+  const confirmAction = async () => {
+    const { type, userId } = modalConfig;
+    try {
+      if (type === 'suspension') {
+        await apiClient.put(`/user/${userId}/suspend`);
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, statut: "SUSPENDU"} : u));
+      } else if (type === 'reactivation') {
+        await apiClient.put(`/user/${userId}/active`);
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, statut: "ACTIF"} : u));
+      } 
+    } catch (error) {
+      console.error('Erreur lors de l’action utilisateur', error);
+    }
     setModalConfig(prev => ({ ...prev, isOpen: false }));
   };
 
@@ -124,8 +166,8 @@ const UtilisateursActifs: React.FC = () => {
         onReactivate={handleReactivate}
         onDelete={handleDelete}
         showEntreprise={true}
-        showAnalyses={true}
-        showDerniereConnexion={true}
+        showAnalyses={false}
+        showDerniereConnexion={false}
       />
 
       <Pagination

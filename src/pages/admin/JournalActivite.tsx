@@ -75,7 +75,7 @@ const JournalActivite: React.FC = () => {
     return matchesSearch && matchesAction && matchesStatut && matchesDate;
   });
 
-  const paginatedLogs = logs.slice(
+  const paginatedLogs = filteredLogs.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
   );
@@ -173,9 +173,9 @@ const JournalActivite: React.FC = () => {
                 {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   IP
                 </th> */}
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Statut
-                </th>
+                </th> */}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -209,11 +209,11 @@ const JournalActivite: React.FC = () => {
                     {/* <td className="px-6 py-4 text-sm text-gray-600">
                       {log.ip}
                     </td> */}
-                    <td className="px-6 py-4">
+                    {/* <td className="px-6 py-4">
                       {getStatutBadge(
                         log.status == "true" ? "SUCCES" : "ECHEC",
                       )}
-                    </td>
+                    </td> */}
                   </tr>
                 ))
               )}

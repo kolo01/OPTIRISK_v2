@@ -37,6 +37,8 @@ apiClient.interceptors.response.use((response) => {
 }, (error) => {
   if (error.response && error.response.status === 401 && window.location.pathname !== '/') {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('optirisk_user');
+    localStorage.removeItem('token');
     window.location.href = '/';
   }
   return Promise.reject(error);

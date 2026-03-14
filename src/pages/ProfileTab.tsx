@@ -215,15 +215,20 @@ const ProfileTab = () => {
   // --- FONCTION POUR SUPPRIMER LE COMPTE ---
   const handleAccountDeletion = async () => {
     if (deleteConfirmationText !== "SUPPRIMER") return;
-
     try {
-      // Ici, vous appelez votre API pour supprimer le compte
-      // await api.deleteAccount();
-      console.log("Compte supprimé");
-
-      // Rediriger vers la page d'accueil ou déconnecter
-      // window.location.href = '/';
-    } catch (error) {
+      // Appel API pour supprimer le compte selon la spec
+      await axios.delete("https://api-optirisk.paullence.link/api/v1/delete-my-account", {
+        headers: {
+          Authorization: `Bearer ${JSON.parse(localStorage.getItem('token') || '{}').access}`
+        }
+      });
+      toast.success("Compte supprimé avec succès.");
+      // Nettoyage localStorage et redirection
+      localStorage.removeItem("token");
+      localStorage.removeItem("optirisk_user");
+      window.location.href = "/";
+    } catch (error: any) {
+      toast.error("Erreur lors de la suppression du compte.");
       console.error("Erreur lors de la suppression:", error);
     }
   };

@@ -74,15 +74,7 @@ const UserActionButtons: React.FC<UserActionButtonsProps> = ({
         </button>
       )}
 
-      {onDelete && (
-        <button
-          onClick={() => onDelete(userId)}
-          className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
-          title="Supprimer"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      )}
+    
     </div>
   );
 };
