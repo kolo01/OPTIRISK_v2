@@ -173,12 +173,15 @@ const AnalysisTab: React.FC = () => {
   const AnalysisService = {
     createAnalysis: async (data: any) => {
       console.log("Création analyse:", data);
-      const response =  await analysisService.initialiseAnalysis(data);
+      const response = await analysisService.initialiseAnalysis(data);
       console.log(response);
       setSlug(response.data.slug);
       // return { ...data, id: "temp-" + Date.now() };
       setCurrentWorkshop(currentWorkshop + 1);
-      addNotification('Analyse créée avec succès\n, passage à l\'atelier 1', 'success');
+      addNotification(
+        "Analyse créée avec succès\n, passage à l'atelier 1",
+        "success",
+      );
       return [...data, { id: response.data.id }];
     },
     updateAnalysis: async (id: string, data: any) => {
@@ -186,14 +189,12 @@ const AnalysisTab: React.FC = () => {
       return data;
     },
 
-    lastUpdate : async(slug:any, data:any)=>{
-      if(currentWorkshop == 5){
-        const response =  await analysisService.updateAnalyse(slug, data)
+    lastUpdate: async (slug: any, data: any) => {
+      if (currentWorkshop == 5) {
+        const response = await analysisService.updateAnalyse(slug, data);
         console.log(response);
       }
-    }
-
-
+    },
   };
 
   const updateAnalysisData = (updates: Partial<Analysis>) => {
@@ -236,35 +237,54 @@ const AnalysisTab: React.FC = () => {
     updateAnalysts(newAnalysts);
   };
 
-  const navigate= useNavigate();
+  const navigate = useNavigate();
   const handleNext = () => {
     if (currentWorkshop < 5) {
       analysisData.id = currentWorkshop.toString();
-      if(currentWorkshop === 1){
-         analysisService.analyseWorkshop(slug, analysisData.workshop1, currentWorkshop)
-      setCurrentWorkshop(currentWorkshop + 1);
-      addNotification(`Passage à l'atelier ${currentWorkshop + 1}`, "info"); 
-      }else if(currentWorkshop === 2){
-         analysisService.analyseWorkshop(slug, analysisData.workshop2, currentWorkshop)
-      setCurrentWorkshop(currentWorkshop + 1);
-      addNotification(`Passage à l'atelier ${currentWorkshop + 1}`, "info");
-      }else if(currentWorkshop === 3){
-         analysisService.analyseWorkshop(slug, analysisData.workshop3, currentWorkshop)
-      setCurrentWorkshop(currentWorkshop + 1);
-      addNotification(`Passage à l'atelier ${currentWorkshop + 1}`, "info");
-      }else if(currentWorkshop === 4){
-      analysisService.analyseWorkshop(slug, analysisData.workshop4, currentWorkshop)
-      setCurrentWorkshop(currentWorkshop + 1);
-      addNotification(`Passage à l'atelier ${currentWorkshop + 1}`, "info");
+      if (currentWorkshop === 1) {
+        analysisService.analyseWorkshop(
+          slug,
+          analysisData.workshop1,
+          currentWorkshop,
+        );
+        setCurrentWorkshop(currentWorkshop + 1);
+        addNotification(`Passage à l'atelier ${currentWorkshop + 1}`, "info");
+      } else if (currentWorkshop === 2) {
+        analysisService.analyseWorkshop(
+          slug,
+          analysisData.workshop2,
+          currentWorkshop,
+        );
+        setCurrentWorkshop(currentWorkshop + 1);
+        addNotification(`Passage à l'atelier ${currentWorkshop + 1}`, "info");
+      } else if (currentWorkshop === 3) {
+        analysisService.analyseWorkshop(
+          slug,
+          analysisData.workshop3,
+          currentWorkshop,
+        );
+        setCurrentWorkshop(currentWorkshop + 1);
+        addNotification(`Passage à l'atelier ${currentWorkshop + 1}`, "info");
+      } else if (currentWorkshop === 4) {
+        analysisService.analyseWorkshop(
+          slug,
+          analysisData.workshop4,
+          currentWorkshop,
+        );
+        setCurrentWorkshop(currentWorkshop + 1);
+        addNotification(`Passage à l'atelier ${currentWorkshop + 1}`, "info");
+      }
     }
-
-  }
-  if(currentWorkshop === 5){
-    analysisService.analyseWorkshop(slug, analysisData.workshop5, currentWorkshop)
-    addNotification(`Atelier 5 terminé. Analyse complète!`, "success");
-    navigate("/analysis")
-  }
-}
+    if (currentWorkshop === 5) {
+      analysisService.analyseWorkshop(
+        slug,
+        analysisData.workshop5,
+        currentWorkshop,
+      );
+      addNotification(`Atelier 5 terminé. Analyse complète!`, "success");
+      // navigate("/analysis")
+    }
+  };
   const handlePrevious = () => {
     if (currentWorkshop > 0) {
       setCurrentWorkshop(currentWorkshop - 1);
@@ -327,10 +347,10 @@ const AnalysisTab: React.FC = () => {
       AnalysisService.createAnalysis({
         title: analysisData.title,
         organization: analysisData.organization,
-        analysts: analysisData.analysts, 
+        analysts: analysisData.analysts,
         context: analysisData.workshop1.config.contexte,
-        type: analysisData.type
-      }).then((result:any) => {
+        type: analysisData.type,
+      }).then((result: any) => {
         if (result) {
           setAnalysisData(result);
           addNotification("Analyse créée avec succès", "success");
@@ -418,12 +438,14 @@ const AnalysisTab: React.FC = () => {
     });
 
     if (
-      analysisData.workshop1.config.contexte && currentWorkshop<0 &&
+      analysisData.workshop1.config.contexte &&
+      currentWorkshop < 0 &&
       analysisData.workshop1.config.contexte.length > 0
     )
       completed++;
     if (
-      analysisData.workshop1.config.standard  && currentWorkshop<0 &&
+      analysisData.workshop1.config.standard &&
+      currentWorkshop < 0 &&
       analysisData.workshop1.config.standard.length > 0
     )
       completed++;
@@ -440,13 +462,24 @@ const AnalysisTab: React.FC = () => {
     setDisplayAnalyse((prev) => !prev);
   };
 
-
-    // Types d'analyse
+  // Types d'analyse
   const typesAnalyse = [
-    { value: 'Nouveau projet', description: 'Analyse pour un nouveau projet ou système' },
-    { value: 'Changement majeur', description: 'Modification significative d\'un système existant' },
-    { value: 'Revue annuelle', description: 'Révision périodique de l\'analyse des risques' },
-    { value: 'Analyse générale IT', description: 'Évaluation générale du paysage de risques IT' }
+    {
+      value: "Nouveau projet",
+      description: "Analyse pour un nouveau projet ou système",
+    },
+    {
+      value: "Changement majeur",
+      description: "Modification significative d'un système existant",
+    },
+    {
+      value: "Revue annuelle",
+      description: "Révision périodique de l'analyse des risques",
+    },
+    {
+      value: "Analyse générale IT",
+      description: "Évaluation générale du paysage de risques IT",
+    },
   ];
 
   return (
@@ -574,16 +607,19 @@ const AnalysisTab: React.FC = () => {
               <option value="Autre">🔧 Autre</option>
             </select>
           </div>
-           <div className="mb-6">
+          <div className="mb-6">
             <label className="block text-sm font-medium text-slate-200 mb-2">
               Type d'analyse *
             </label>
             <select
               value={analysisData.type || ""}
-              onChange={(e) => analysisData.id === "0" && updateAnalysisData({ type: e.target.value as any })}
+              onChange={(e) =>
+                analysisData.id === "0" &&
+                updateAnalysisData({ type: e.target.value as any })
+              }
               className="input-ebios-dark w-full"
             >
-             {typesAnalyse.map((type) => (
+              {typesAnalyse.map((type) => (
                 <option key={type.value} value={type.value}>
                   {type.value} - {type.description}
                 </option>
@@ -788,7 +824,7 @@ const AnalysisTab: React.FC = () => {
             </div>
 
             <div className="flex items-center space-x-4">
-              {  currentWorkshop < 5 && (
+              {currentWorkshop < 5 && (
                 <div className="flex items-center text-yellow-500 text-sm">
                   <AlertCircle className="w-4 h-4 mr-2" />
                   <span>Complétez cet atelier avant de continuer</span>
@@ -801,7 +837,7 @@ const AnalysisTab: React.FC = () => {
                 </span>
                 <button
                   onClick={handleNext}
-                  disabled={currentWorkshop > 6 }
+                  disabled={currentWorkshop > 6}
                   className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
                   <span>
@@ -820,7 +856,10 @@ const AnalysisTab: React.FC = () => {
         <p>
           Méthode EBIOS Risk Manager - ANSSI • Version 1.1 •
           <span className="mx-2">|</span>
-          Dernière sauvegarde : {analysisData?.updatedAt ? analysisData?.updatedAt?.toLocaleTimeString() : 'N/A'}
+          Dernière sauvegarde :{" "}
+          {analysisData?.updatedAt
+            ? analysisData?.updatedAt?.toLocaleTimeString()
+            : "N/A"}
           <span className="mx-2">|</span>
           Statut : <span className="text-blue-400">{analysisData?.status}</span>
         </p>

@@ -9,6 +9,10 @@ const StatsService = {
     const response = await apiClient.get("/analyses/reports/");
     return response.data;
   },
+  getlogs: async () => {
+    const response = await apiClient.get("/admin/logs/");
+    return response.data;
+  }
 };
 
 export default StatsService;
