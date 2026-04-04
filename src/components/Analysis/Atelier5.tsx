@@ -50,7 +50,7 @@ const Atelier5: React.FC<Atelier5Props> = ({ analysisData, updateAnalysisData, o
     acceptance: 'Accepté' as 'Accepté' | 'Conditionnel' | 'Non accepté'
   });
 
-  const [activeTab, setActiveTab] = useState<'measures' | 'residual' | 'dashboard'>('measures');
+  const [activeTab, setActiveTab] = useState<'measures' | 'residual' | 'dashboard'>('residual');
   const [selectedRisks, setSelectedRisks] = useState<string[]>([]);
 
   // Fonction simple de notification

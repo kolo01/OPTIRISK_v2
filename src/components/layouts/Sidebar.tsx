@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom'; // ← AJOUTER useLocation
-import { 
-  LayoutDashboard, 
-  BarChart3, 
+import {
+  LayoutDashboard,
+  BarChart3,
   FileText,
-  Settings,
-  HelpCircle,
   ChevronRight,
   ChevronLeft,
   X,
-  Users,        // ← AJOUTER
-  Activity      // ← AJOUTER
+  Users,
+  Activity
 } from 'lucide-react';
 
 interface SidebarProps {

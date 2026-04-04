@@ -233,7 +233,7 @@ const Atelier4: React.FC<Atelier4Props> = ({ analysisData, updateAnalysisData })
       description: '',
       location: '',
       criticality: 'Moyenne'
-    });
+    }); // description conservé dans le state pour la compatibilité des données existantes
 
     addNotification('Bien support ajouté', 'success');
   };
@@ -451,50 +451,54 @@ const Atelier4: React.FC<Atelier4Props> = ({ analysisData, updateAnalysisData })
               </h4>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                <input
-                  type="text"
-                  value={newAsset.name}
-                  onChange={(e) => setNewAsset({ ...newAsset, name: e.target.value })}
-                  placeholder="Nom *"
-                  className="input-ebios-dark"
-                />
-                
-                <select
-                  value={newAsset.type}
-                  onChange={(e) => setNewAsset({ ...newAsset, type: e.target.value as any })}
-                  className="input-ebios-dark"
-                >
-                  {assetTypes.map(type => (
-                    <option key={type.value} value={type.value}>{type.label}</option>
-                  ))}
-                </select>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Nom du bien *</label>
+                  <input
+                    type="text"
+                    value={newAsset.name}
+                    onChange={(e) => setNewAsset({ ...newAsset, name: e.target.value })}
+                    placeholder="Nom du bien"
+                    className="input-ebios-dark w-full"
+                  />
+                </div>
 
-                <input
-                  type="text"
-                  value={newAsset.location}
-                  onChange={(e) => setNewAsset({ ...newAsset, location: e.target.value })}
-                  placeholder="Localisation"
-                  className="input-ebios-dark"
-                />
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Type de bien</label>
+                  <select
+                    value={newAsset.type}
+                    onChange={(e) => setNewAsset({ ...newAsset, type: e.target.value as any })}
+                    className="input-ebios-dark w-full"
+                  >
+                    {assetTypes.map(type => (
+                      <option key={type.value} value={type.value}>{type.label}</option>
+                    ))}
+                  </select>
+                </div>
 
-                <select
-                  value={newAsset.criticality}
-                  onChange={(e) => setNewAsset({ ...newAsset, criticality: e.target.value as any })}
-                  className="input-ebios-dark"
-                >
-                  {criticalityLevels.map(level => (
-                    <option key={level.value} value={level.value}>{level.label}</option>
-                  ))}
-                </select>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Localisation</label>
+                  <input
+                    type="text"
+                    value={newAsset.location}
+                    onChange={(e) => setNewAsset({ ...newAsset, location: e.target.value })}
+                    placeholder="Localisation"
+                    className="input-ebios-dark w-full"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Niveau de Criticité</label>
+                  <select
+                    value={newAsset.criticality}
+                    onChange={(e) => setNewAsset({ ...newAsset, criticality: e.target.value as any })}
+                    className="input-ebios-dark w-full"
+                  >
+                    {criticalityLevels.map(level => (
+                      <option key={level.value} value={level.value}>{level.label}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
-
-              <textarea
-                value={newAsset.description}
-                onChange={(e) => setNewAsset({ ...newAsset, description: e.target.value })}
-                placeholder="Description détaillée"
-                className="input-ebios-dark mb-4"
-                rows={3}
-              />
 
               <button
                 onClick={handleAddAsset}
@@ -607,13 +611,18 @@ const Atelier4: React.FC<Atelier4Props> = ({ analysisData, updateAnalysisData })
                   </select>
                 </div>
 
-                <textarea
-                  value={newOperationalScenario.operatingMode}
-                  onChange={(e) => setNewOperationalScenario({ ...newOperationalScenario, operatingMode: e.target.value })}
-                  placeholder="Mode opératoire détaillé"
-                  className="input-ebios-dark"
-                  rows={4}
-                />
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1">
+                    Mode opératoire détaillé
+                  </label>
+                  <textarea
+                    value={newOperationalScenario.operatingMode}
+                    onChange={(e) => setNewOperationalScenario({ ...newOperationalScenario, operatingMode: e.target.value })}
+                    placeholder="Décrire étape par étape le mode opératoire du scénario (ex: Phishing → Accès initial → Mouvement latéral → Exfiltration)"
+                    className="input-ebios-dark w-full"
+                    rows={4}
+                  />
+                </div>
 
                 <button
                   onClick={handleAddOperationalScenario}

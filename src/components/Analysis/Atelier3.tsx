@@ -418,13 +418,38 @@ const Atelier3: React.FC<Atelier3Props> = ({ analysisData, updateAnalysisData })
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <textarea
-                    value={newScenario.attackPath || ''}
-                    onChange={(e) => setNewScenario({ ...newScenario, attackPath: e.target.value })}
-                    placeholder="Chemin d'attaque (ex: Reconnaissance → Intrusion → Propagation → Impact)"
-                    className="input-ebios-dark"
-                    rows={3}
-                  />
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs text-slate-400">Chemin d'attaque</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const valeur = newScenario.targetBusinessValue || 'valeur métier';
+                          const source = newScenario.riskSource || 'source de risque';
+                          const paths: Record<string, string> = {
+                            'Cybercriminel': `Reconnaissance de ${valeur} → Phishing ciblé → Compromission d'accès → Exfiltration / chiffrement`,
+                            'État-nation': `Renseignement sur ${valeur} → Spear phishing → Implant persistant → Sabotage ou espionnage`,
+                            'Concurrent': `Identification de ${valeur} → Ingénierie sociale → Vol de données → Exploitation concurrentielle`,
+                            'Initié malveillant': `Accès privilégié à ${valeur} → Abus de droits → Exfiltration interne → Dissimulation`,
+                          };
+                          const generated = paths[source]
+                            || `Reconnaissance → Accès initial (${source}) → Mouvement latéral vers ${valeur} → Impact / Événement redouté`;
+                          setNewScenario({ ...newScenario, attackPath: generated });
+                        }}
+                        className="text-xs bg-purple-700 hover:bg-purple-600 text-white px-2 py-1 rounded flex items-center gap-1"
+                      >
+                        <Zap className="w-3 h-3" />
+                        Générer avec IA
+                      </button>
+                    </div>
+                    <textarea
+                      value={newScenario.attackPath || ''}
+                      onChange={(e) => setNewScenario({ ...newScenario, attackPath: e.target.value })}
+                      placeholder="Chemin d'attaque (ex: Reconnaissance → Intrusion → Propagation → Impact)"
+                      className="input-ebios-dark w-full"
+                      rows={3}
+                    />
+                  </div>
 
                   <textarea
                     value={newScenario.fearedEvent || ''}

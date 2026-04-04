@@ -254,12 +254,16 @@ const ProfileTab = () => {
     }
   }, [user]);
   const updateProfilePhoto = async (file: any) => {
-    try {      const formData = new FormData();
+    try {
+      const formData = new FormData();
       formData.append("avatar", file);
       const response = await profileService.uploadAvatar(file);
       if (response.success) {
         toast.success("Photo de profil mise à jour !");
-        setUserPhoto(file ? URL.createObjectURL(file) : null);
+        const url = file ? URL.createObjectURL(file) : null;
+        setUserPhoto(url);
+        // Notifier le header pour mettre à jour l'avatar immédiatement
+        window.dispatchEvent(new CustomEvent('avatar-updated', { detail: { url } }));
       } else {
         toast.error("Échec de la mise à jour de la photo de profil.");
       }
@@ -735,8 +739,8 @@ const ProfileTab = () => {
         </div>
       </div>
 
-      {/* 2. Zone de danger (Suppression de compte) */}
-      <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
+      {/* 2. Zone de danger (supprimée sur demande client) */}
+      {false && <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
         <div className="flex items-center mb-4">
           <AlertTriangle className="w-6 h-6 text-red-600 mr-2" />
           <h2 className="text-xl font-semibold text-red-900">Zone de danger</h2>
@@ -858,7 +862,7 @@ const ProfileTab = () => {
             </div>
           )}
         </div>
-      </div>
+      </div>}
 
       {/* 3. Tableau des analyses */}
       {/* <div className="bg-white rounded-lg shadow-md p-6">

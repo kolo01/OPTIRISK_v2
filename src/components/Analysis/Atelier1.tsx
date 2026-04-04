@@ -490,10 +490,15 @@ const Atelier1: React.FC<Atelier1Props> = ({ analysisData, updateAnalysisData })
         )}
       </div>
 
-      {/* Ancienne Section 6 : Socle de sécurité et écarts - VERSION AMÉLIORÉE */}
+      {/* Section Socle de sécurité */}
       <div className="ebios-card">
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center">
+          <Shield className="w-5 h-5 mr-2 text-green-400" />
+          Socle de sécurité
+        </h3>
+
+        {/* Ligne 1 : Socle défini + État identifié */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <div>
             <label className="block text-sm font-medium text-slate-200 mb-2">
               Socle de sécurité défini *
@@ -502,19 +507,61 @@ const Atelier1: React.FC<Atelier1Props> = ({ analysisData, updateAnalysisData })
               value={localConfig.socleSecurite}
               onChange={(e) => handleConfigChange({ socleSecurite: e.target.value })}
               placeholder="Décrire le socle de sécurité existant ou à mettre en place..."
-              className="input-ebios-dark w-full h-40 px-3 py-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              className="input-ebios-dark w-full h-32 px-3 py-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-slate-200 mb-2">
-              Écarts identifiés *
+              État identifié
+            </label>
+            <select
+              value={(localConfig as any).etatIdentifie || ''}
+              onChange={(e) => handleConfigChange({ etatIdentifie: e.target.value } as any)}
+              className="input-ebios-dark w-full mb-3"
+            >
+              <option value="">— Sélectionner l'état —</option>
+              <option value="Non défini">Non défini</option>
+              <option value="Partiel">Partiel</option>
+              <option value="En cours">En cours</option>
+              <option value="Complet">Complet</option>
+            </select>
+
+            <label className="block text-sm font-medium text-slate-200 mb-2">
+              Écarts identifiés
             </label>
             <textarea
               value={localConfig.ecarts}
               onChange={(e) => handleConfigChange({ ecarts: e.target.value })}
               placeholder="Identifier les écarts entre l'existant et les exigences du standard sélectionné..."
-              className="input-ebios-dark w-full h-40 px-3 py-2 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="input-ebios-dark w-full h-24 px-3 py-2 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+            />
+          </div>
+        </div>
+
+        {/* Ligne 2 : Périmètre + Événements redoutés */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-slate-200 mb-2">
+              Périmètre de l'étude *
+            </label>
+            <textarea
+              value={localConfig.perimetreEtude}
+              onChange={(e) => handleConfigChange({ perimetreEtude: e.target.value })}
+              placeholder="Définir précisément le périmètre de l'analyse : systèmes inclus, exclus, durée, ressources..."
+              className="input-ebios-dark w-full h-32 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-200 mb-2">
+              Événements redoutés principaux *
+            </label>
+            <textarea
+              value={localConfig.evenementsRedoutes}
+              onChange={(e) => handleConfigChange({ evenementsRedoutes: e.target.value })}
+              placeholder="Décrire les événements redoutés associés aux valeurs métier identifiées..."
+              className="input-ebios-dark w-full h-32 px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
             />
           </div>
         </div>
@@ -837,39 +884,6 @@ const Atelier1: React.FC<Atelier1Props> = ({ analysisData, updateAnalysisData })
         </div>
       </div>
 
-      {/* Section 6 : Périmètre et événements redoutés - VERSION AMÉLIORÉE */}
-      <div className="ebios-card">
-        <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center">
-          <ListChecks className="w-5 h-5 mr-2 text-slate-400" />
-          4. Périmètre et Événements redoutés
-        </h3>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-slate-200 mb-2">
-              Périmètre de l'étude *
-            </label>
-            <textarea
-              value={localConfig.perimetreEtude}
-              onChange={(e) => handleConfigChange({ perimetreEtude: e.target.value })}
-              placeholder="Définir précisément le périmètre de l'analyse : systèmes inclus, exclus, durée, ressources..."
-              className="input-ebios-dark w-full h-40 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-slate-200 mb-2">
-              Événements redoutés principaux *
-            </label>
-            <textarea
-              value={localConfig.evenementsRedoutes}
-              onChange={(e) => handleConfigChange({ evenementsRedoutes: e.target.value })}
-              placeholder="Décrire les événements redoutés associés aux valeurs métier identifiées..."
-              className="input-ebios-dark w-full h-40 px-3 py-2 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-            />
-          </div>
-        </div>
-      </div>
 
       
 

@@ -10,6 +10,7 @@ import Atelier2 from './Atelier2';
 import Atelier3 from './Atelier3';
 import Atelier4 from './Atelier4';
 import Atelier5 from './Atelier5';
+import RapportExecutif from './RapportExecutif';
 
 const EditAnalysis: React.FC = () => {
   const params = useParams<{ slug?: string; id?: string }>();
@@ -168,12 +169,10 @@ const EditAnalysis: React.FC = () => {
   };
 
   const handleNext = async () => {
-    if (currentWorkshop < 5) {
+    if (currentWorkshop <= 5) {
       await saveCurrentWorkshop();
-      setCurrentWorkshop((w) => w + 1);
-    } else {
-      await saveCurrentWorkshop();
-      await handleSaveAll();
+      if (currentWorkshop < 6) setCurrentWorkshop((w) => w + 1);
+      if (currentWorkshop === 5) await handleSaveAll();
     }
   };
 
@@ -194,6 +193,8 @@ const EditAnalysis: React.FC = () => {
         return <Atelier4 {...props} />;
       case 5:
         return <Atelier5 {...props} onNavigateToReports={() => {}} />;
+      case 6:
+        return <RapportExecutif analysisData={editedAnalysis} />;
       default:
         return null;
     }
@@ -250,15 +251,19 @@ const EditAnalysis: React.FC = () => {
           </button>
 
           <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-400">Atelier {currentWorkshop}/5</span>
-            <button
-              onClick={handleNext}
-              disabled={saving}
-              className="btn-primary disabled:opacity-50 flex items-center gap-2"
-            >
-              <span>{currentWorkshop === 5 ? 'Terminer' : 'Atelier suivant'}</span>
-              {currentWorkshop < 5 && <ChevronRight className="w-4 h-4" />}
-            </button>
+            <span className="text-sm text-slate-400">
+              {currentWorkshop === 6 ? 'Rapport Exécutif' : `Atelier ${currentWorkshop}/5`}
+            </span>
+            {currentWorkshop < 6 && (
+              <button
+                onClick={handleNext}
+                disabled={saving}
+                className="btn-primary disabled:opacity-50 flex items-center gap-2"
+              >
+                <span>{currentWorkshop === 5 ? 'Rapport Exécutif' : 'Atelier suivant'}</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
       </div>

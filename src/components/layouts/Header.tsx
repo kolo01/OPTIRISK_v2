@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  User, 
-  Bell, 
+import {
+  User,
+  Bell,
   Search,
   LogOut,
-  Settings,
-  HelpCircle,
   ChevronDown,
   Menu,
   X
@@ -22,8 +20,17 @@ const Header: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notificationsRef = useRef<HTMLDivElement>(null);
 
-  // Récupérer l'utilisateur (exemple)
-  const user = JSON.parse(localStorage.getItem('optirisk_user') || '{}')
+  // Récupérer l'utilisateur et écouter les mises à jour d'avatar
+  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('optirisk_user') || '{}'));
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleAvatarUpdate = (e: CustomEvent) => {
+      setAvatarUrl(e.detail.url);
+    };
+    window.addEventListener('avatar-updated', handleAvatarUpdate as EventListener);
+    return () => window.removeEventListener('avatar-updated', handleAvatarUpdate as EventListener);
+  }, []);
 
   // Fermer les dropdowns en cliquant à l'extérieur
   useEffect(() => {
@@ -174,22 +181,6 @@ const Header: React.FC = () => {
               )}
             </div>
 
-            {/* Settings - Hidden on mobile */}
-            <Link
-              to="/parametres"
-              className="hidden md:block p-2 rounded-full hover:bg-gray-100"
-            >
-              <Settings className="h-5 w-5 md:h-6 md:w-6 text-gray-600" />
-            </Link>
-
-            {/* Help - Hidden on mobile */}
-            <Link
-              to="/aide"
-              className="hidden md:block p-2 rounded-full hover:bg-gray-100"
-            >
-              <HelpCircle className="h-5 w-5 md:h-6 md:w-6 text-gray-600" />
-            </Link>
-
             {/* User dropdown */}
             <div className="relative" ref={dropdownRef}>
               <button
@@ -199,11 +190,11 @@ const Header: React.FC = () => {
                 }}
                 className="flex items-center space-x-2 md:space-x-3 p-1 md:p-2 rounded-lg hover:bg-gray-100"
               >
-                <div className="h-8 w-8 md:h-9 md:w-9 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm md:text-base">
-                  {user.avatar ? (
-                    <img 
-                      src={user.avatar} 
-                      alt="Avatar" 
+                <div className="h-8 w-8 md:h-9 md:w-9 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm md:text-base overflow-hidden">
+                  {(avatarUrl || user.avatar) ? (
+                    <img
+                      src={avatarUrl || user.avatar}
+                      alt="Avatar"
                       className="h-8 w-8 md:h-9 md:w-9 rounded-full object-cover"
                     />
                   ) : (
@@ -243,24 +234,6 @@ const Header: React.FC = () => {
                     >
                       <User className="h-4 w-4 mr-3" />
                       Mon profil
-                    </Link>
-                    
-                    <Link
-                      to="/parametres"
-                      onClick={() => setUserDropdown(false)}
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 md:hidden"
-                    >
-                      <Settings className="h-4 w-4 mr-3" />
-                      Paramètres
-                    </Link>
-
-                    <Link
-                      to="/aide"
-                      onClick={() => setUserDropdown(false)}
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 md:hidden"
-                    >
-                      <HelpCircle className="h-4 w-4 mr-3" />
-                      Aide
                     </Link>
                     
                     <Link
@@ -305,22 +278,6 @@ const Header: React.FC = () => {
             >
               <User className="h-5 w-5 mr-3 text-gray-600" />
               Mon profil
-            </Link>
-            <Link
-              to="/parametres"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center px-4 py-3 rounded-lg hover:bg-gray-100"
-            >
-              <Settings className="h-5 w-5 mr-3 text-gray-600" />
-              Paramètres
-            </Link>
-            <Link
-              to="/aide"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center px-4 py-3 rounded-lg hover:bg-gray-100"
-            >
-              <HelpCircle className="h-5 w-5 mr-3 text-gray-600" />
-              Aide
             </Link>
             <Link
               to="/notifications"
