@@ -51,15 +51,7 @@ const Header: React.FC = () => {
     await authService.logout();
   };
 
-  // Notifications d'exemple
-  const notificationList = [
-    { id: 1, title: 'Nouvelle analyse disponible', time: 'Il y a 2 minutes', unread: true },
-    { id: 2, title: 'Rapport mensuel généré', time: 'Il y a 1 heure', unread: true },
-    { id: 3, title: 'Mise à jour des risques', time: 'Il y a 3 heures', unread: false },
-    { id: 4, title: 'Tâche échéante demain', time: 'Il y a 5 heures', unread: false },
-  ];
 
-  const unreadCount = notificationList.filter(n => n.unread).length;
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
@@ -110,76 +102,7 @@ const Header: React.FC = () => {
           </div>
 
           {/* Right side - Icons & User */}
-          <div className="flex items-center space-x-2 md:space-x-4">
-            {/* Notifications */}
-            <div className="relative" ref={notificationsRef}>
-              <button
-                onClick={() => {
-                  setNotifications(!notifications);
-                  setUserDropdown(false);
-                }}
-                className="p-2 rounded-full hover:bg-gray-100 relative"
-              >
-                <Bell className="h-5 w-5 md:h-6 md:w-6 text-gray-600" />
-                {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-                )}
-              </button>
-
-              {notifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
-                  <div className="p-4 border-b flex justify-between items-center">
-                    <h3 className="font-semibold text-gray-900">Notifications</h3>
-                    {unreadCount > 0 && (
-                      <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                        {unreadCount} non lu{unreadCount > 1 ? 's' : ''}
-                      </span>
-                    )}
-                  </div>
-                  <div className="max-h-96 overflow-y-auto">
-                    {notificationList.length > 0 ? (
-                      notificationList.map((notification) => (
-                        <div
-                          key={notification.id}
-                          className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${
-                            notification.unread ? 'bg-blue-50' : ''
-                          }`}
-                          onClick={() => {
-                            // Marquer comme lu
-                            setNotifications(false);
-                          }}
-                        >
-                          <div className="flex justify-between items-start">
-                            <p className="text-sm font-medium text-gray-900">
-                              {notification.title}
-                            </p>
-                            {notification.unread && (
-                              <span className="h-2 w-2 bg-blue-500 rounded-full mt-1"></span>
-                            )}
-                          </div>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {notification.time}
-                          </p>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-4 text-center">
-                        <p className="text-sm text-gray-500">Aucune notification</p>
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-3 border-t">
-                    <Link
-                      to="/notifications"
-                      onClick={() => setNotifications(false)}
-                      className="text-sm text-blue-600 hover:text-blue-800 text-center block"
-                    >
-                      Voir toutes les notifications
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
+          <div className="flex items-center space-x-2 md:space-x-4">            
 
             {/* User dropdown */}
             <div className="relative" ref={dropdownRef}>
@@ -236,20 +159,6 @@ const Header: React.FC = () => {
                       Mon profil
                     </Link>
                     
-                    <Link
-                      to="/notifications"
-                      onClick={() => setUserDropdown(false)}
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      <Bell className="h-4 w-4 mr-3" />
-                      Notifications
-                      {unreadCount > 0 && (
-                        <span className="ml-auto bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full">
-                          {unreadCount}
-                        </span>
-                      )}
-                    </Link>
-                    
                     <div className="border-t border-gray-200 my-2"></div>
                     
                     <button
@@ -278,19 +187,6 @@ const Header: React.FC = () => {
             >
               <User className="h-5 w-5 mr-3 text-gray-600" />
               Mon profil
-            </Link>
-            <Link
-              to="/notifications"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center px-4 py-3 rounded-lg hover:bg-gray-100"
-            >
-              <Bell className="h-5 w-5 mr-3 text-gray-600" />
-              Notifications
-              {unreadCount > 0 && (
-                <span className="ml-auto bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full">
-                  {unreadCount}
-                </span>
-              )}
             </Link>
           </div>
         </div>

@@ -8,7 +8,6 @@ import {
   Filter,
   Search,
   Calendar,
-  User,
   Building,
   BarChart,
   Clock,
@@ -27,44 +26,24 @@ import {
   Copy,
   ExternalLink,
   Printer,
+  Shield,
+  Briefcase,
 } from "lucide-react";
 import SweetButton from "./SweetButton";
 import StatsService from "../services/adminService/statsServices";
 
-// --- Types avancés ---
+// --- Types basés sur la structure API réelle ---
 export interface Rapport {
   id: string;
-  titre: string;
-  description: string;
-  dateCreation: Date;
-  dateModification: Date;
-  statut: "Publié" | "Brouillon" | "Archivé" | "En attente";
-  categorie:
-    | "Financier"
-    | "Commercial"
-    | "Technique"
-    | "RH"
-    | "Marketing"
-    | "Autre";
-  auteur: {
-    id: string;
-    nom: string;
-    email: string;
-    avatar?: string;
-  };
-  organisation: string;
-  vues: number;
-  taille: number; // en bytes
-  motsCles: string[];
-  version: string;
-  estPublic: boolean;
-  permissions: string[];
-  metadata: {
-    pages: number;
-    langage: string;
-    format: "PDF" | "DOCX" | "XLSX" | "PPTX";
-    derniereOuverture?: Date;
-  };
+  title: string;
+  type: string;
+  organization: string;
+  updated_at: string; // ISO date string
+  technical_report?: string; // URL PDF
+  executive_report?: string; // URL PDF
+  // Champs optionnels enrichis côté front
+  statut?: "Publié" | "Brouillon" | "Archivé" | "En attente";
+  categorie?: "Financier" | "Commercial" | "Technique" | "RH" | "Marketing" | "Autre";
 }
 
 interface RapportFiltres {
@@ -72,7 +51,7 @@ interface RapportFiltres {
   categorie: string;
   dateDebut: string;
   dateFin: string;
-  auteurId: string;
+  organisation: string;
   recherche: string;
 }
 
@@ -81,137 +60,125 @@ interface Tri {
   direction: "asc" | "desc";
 }
 
-// --- Composants enfants pour modularité ---
-const BadgeStatut = ({ statut }: { statut: Rapport["statut"] }) => {
+// --- Helpers ---
+const formatDate = (dateStr: string) => {
+  try {
+    return new Date(dateStr).toLocaleDateString("fr-FR", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+};
+
+// --- Composants enfants ---
+const BadgeStatut = ({ statut }: { statut?: Rapport["statut"] }) => {
+  const val = statut ?? "Publié";
   const configs = {
     Publié: { bg: "bg-emerald-500", icon: CheckCircle, text: "PUBLIÉ" },
     Brouillon: { bg: "bg-amber-500", icon: AlertCircle, text: "BROUILLON" },
     Archivé: { bg: "bg-slate-600", icon: Clock, text: "ARCHIVÉ" },
     "En attente": { bg: "bg-blue-500", icon: Clock, text: "EN ATTENTE" },
   };
-
-  const config = configs[statut];
-  const Icon = config?.icon;
-
+  const config = configs[val];
+  const Icon = config.icon;
   return (
-    <span
-      className={`inline-flex items-center px-3 py-1.5 rounded-full text-white font-bold text-xs ${config?.bg}`}
-    >
+    <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-white font-bold text-xs ${config.bg}`}>
       <Icon className="w-3 h-3 mr-1.5" />
-      {config?.text}
+      {config.text}
     </span>
   );
 };
 
-const BadgeCategorie = ({ categorie }: { categorie: Rapport["categorie"] }) => {
-  const couleurs = {
-    Financier: "bg-blue-600",
-    Commercial: "bg-purple-600",
-    Technique: "bg-orange-600",
-    RH: "bg-pink-600",
-    Marketing: "bg-indigo-600",
-    Autre: "bg-gray-600",
-  };
+const BadgeType = ({ type }: { type: string }) => (
+  <span className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-bold text-xs uppercase">
+    {type}
+  </span>
+);
 
-  return (
-    <span
-      className={`px-3 py-1.5 rounded-lg text-white font-bold text-xs ${couleurs[categorie]}`}
-    >
-      {categorie.toUpperCase()}
-    </span>
-  );
-};
+// Boutons pour ouvrir les rapports PDF
+const RapportLinks = ({ rapport }: { rapport: Rapport }) => (
+  <div className="flex gap-2 flex-wrap">
+    {rapport.technical_report && (
+      <a
+        href={rapport.technical_report}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors"
+      >
+        <Shield className="w-3.5 h-3.5" />
+        Rapport Technique
+      </a>
+    )}
+    {rapport.executive_report && (
+      <a
+        href={rapport.executive_report}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg transition-colors"
+      >
+        <Briefcase className="w-3.5 h-3.5" />
+        Rapport Exécutif
+      </a>
+    )}
+  </div>
+);
 
 const CarteRapport = ({
   rapport,
   onAction,
 }: {
-  rapport: any;
+  rapport: Rapport;
   onAction: (action: string, rapport: Rapport) => void;
 }) => (
-  <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 bg-white rounded-xl shadow-lg border border-gray-200 hover:shadow-xl transition-shadow duration-300">
-    <div className="p-6">
+  <div className="bg-white rounded-xl shadow-lg border border-gray-200 hover:shadow-xl transition-shadow duration-300 flex flex-col">
+    <div className="p-6 flex-1">
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-3">
-            <BadgeStatut statut={rapport?.statut || "Archivé"} />
-            <BadgeCategorie categorie={rapport?.categorie || "Autre"} />
-            {rapport.estPublic && (
-              <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-bold rounded">
-                PUBLIC
-              </span>
-            )}
+          <div className="flex items-center gap-3 mb-3 flex-wrap">
+            <BadgeStatut statut={rapport.statut} />
+            <BadgeType type={rapport.type} />
           </div>
 
-          <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
+          <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
             {rapport.title}
           </h3>
 
-          <p className="text-gray-600 mb-4 line-clamp-3">
-            {rapport.description}
-          </p>
+          <div className="flex items-center text-sm text-gray-500 mb-3">
+            <Building className="w-4 h-4 mr-1.5 shrink-0" />
+            <span className="font-medium">{rapport.organization}</span>
+          </div>
 
-          <div className="flex items-center justify-between text-sm text-gray-500">
-            <div className="flex items-center">
-              <User className="w-4 h-4 mr-1.5" />
-              <span className="font-medium">{rapport.auteur.nom}</span>
-            </div>
-            <div className="flex items-center">
-              <Eye className="w-4 h-4 mr-1.5" />
-              <span>{rapport.vues} vues</span>
-            </div>
+          <div className="flex items-center text-sm text-gray-400">
+            <Calendar className="w-4 h-4 mr-1.5 shrink-0" />
+            <span>Mis à jour le {formatDate(rapport.updated_at)}</span>
           </div>
         </div>
-
-        <button className="text-gray-400 hover:text-gray-600">
+        <button className="text-gray-400 hover:text-gray-600 ml-2">
           <MoreVertical className="w-5 h-5" />
         </button>
       </div>
-
-      <div className="border-t pt-4">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="text-gray-500">Format:</span>
-            <span className="ml-2 font-bold text-gray-900">
-              {rapport?.metadata?.format || "N/A"}
-            </span>
-          </div>
-          <div>
-            <span className="text-gray-500">Taille:</span>
-            <span className="ml-2 font-bold text-gray-900">
-              {(rapport.taille / 1024 / 1024).toFixed(2)} MB
-            </span>
-          </div>
-        </div>
-      </div>
     </div>
 
-    <div className="border-t px-6 py-4 bg-gray-50 rounded-b-xl">
-      <div className="flex justify-between items-center">
-        <div className="text-sm text-gray-600">
-          <Calendar className="inline w-4 h-4 mr-1.5" />
-          {rapport.last_updated.toLocaleDateString("fr-FR")}
-        </div>
-        <div className="flex gap-2">
-          <SweetButton
-            className="px-3 py-1.5 text-sm border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg"
-            onClick={() => onAction("voir", rapport)}
-          >
-            <Eye className="w-4 h-4" />
-          </SweetButton>
-          <SweetButton
-            className="px-3 py-1.5 text-sm border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg"
-            onClick={() => onAction("telecharger", rapport)}
-          >
-            <Download className="w-4 h-4" />
-          </SweetButton>
-          <SweetButton
-            className="px-3 py-1.5 text-sm border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg"
-            onClick={() => onAction("partager", rapport)}
-          >
-            <Share2 className="w-4 h-4" />
-          </SweetButton>
-        </div>
+    <div className="border-t px-6 py-4 bg-gray-50 rounded-b-xl space-y-3">
+      <RapportLinks rapport={rapport} />
+      <div className="flex gap-2">
+        <SweetButton
+          className="px-3 py-1.5 text-sm border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg"
+          onClick={() => onAction("partager", rapport)}
+          title="Partager"
+        >
+          <Share2 className="w-4 h-4" />
+        </SweetButton>
+        <SweetButton
+          className="px-3 py-1.5 text-sm border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg"
+          onClick={() => onAction("imprimer", rapport)}
+          title="Imprimer"
+        >
+          <Printer className="w-4 h-4" />
+        </SweetButton>
       </div>
     </div>
   </div>
@@ -219,133 +186,149 @@ const CarteRapport = ({
 
 // --- Composant principal ---
 const RapportsPage = () => {
-  // --- États avancés ---
-  const [rapports, setRapports] = useState<any[]>([]);
+  const [rapports, setRapports] = useState<Rapport[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [vue, setVue] = useState<"tableau" | "grille">("tableau");
-  const [tri, setTri] = useState<Tri>({
-    champ: "dateModification",
-    direction: "desc",
-  });
+  const [tri, setTri] = useState<Tri>({ champ: "updated_at", direction: "desc" });
   const [filtres, setFiltres] = useState<RapportFiltres>({
     statut: "Tous",
     categorie: "Tous",
     dateDebut: "",
     dateFin: "",
-    auteurId: "",
+    organisation: "",
     recherche: "",
   });
   const [selection, setSelection] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const [taillePage, setTaillePage] = useState(20);
   const [total, setTotal] = useState(0);
-  const [rapportsStats, setRapportsStats] = useState<any>(null);
 
-  // --- Récupération optimisée des données ---
   const fetchRapports = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-
       const data = await StatsService.getUsersReports();
-      console.log("data", data.data);
-      setRapports(data.data);
-      setRapportsStats(data.data);
-      setTotal(data.data.length);
+      const items: Rapport[] = data.data ?? [];
+      setRapports(items);
+      setTotal(items.length);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur de chargement");
-      console.error("Erreur:", err);
     } finally {
       setLoading(false);
     }
-  }, [page, taillePage, tri, filtres]);
+  }, []);
 
   useEffect(() => {
     fetchRapports();
   }, [fetchRapports]);
 
-  // --- Calculs mémoisés ---
-  const stats = useMemo(
-    () => ({
-      total: total || 0,
-      publies: rapportsStats?.analyses?.completed || 0,
-      brouillons: rapportsStats?.analyses?.draft || 0,
-      archives: rapportsStats?.analyses?.archived || 0,
-      enAttente: rapportsStats?.analyses?.in_progress || 0,
-      totalTaille: rapportsStats?.analyses?.total || 0,
-    }),
-    [rapports, total],
-  );
+  // --- Filtrage + tri côté client ---
+  const rapportsFiltres = useMemo(() => {
+    let liste = [...rapports];
 
-  const categoriesUniques = useMemo(
-    () => [...new Set(rapports.map((r) => r.categorie))],
-    [rapports],
-  );
+    if (filtres.recherche) {
+      const q = filtres.recherche.toLowerCase();
+      liste = liste.filter(
+        (r) =>
+          r.title?.toLowerCase().includes(q) ||
+          r.type?.toLowerCase().includes(q) ||
+          r.organization?.toLowerCase().includes(q)
+      );
+    }
 
-  // --- Fonctions avancées ---
+    if (filtres.statut !== "Tous") {
+      liste = liste.filter((r) => (r.statut ?? "Publié") === filtres.statut);
+    }
+
+    if (filtres.organisation) {
+      const q = filtres.organisation.toLowerCase();
+      liste = liste.filter((r) => r.organization?.toLowerCase().includes(q));
+    }
+
+    if (filtres.dateDebut) {
+      liste = liste.filter(
+        (r) => new Date(r.updated_at) >= new Date(filtres.dateDebut)
+      );
+    }
+    if (filtres.dateFin) {
+      liste = liste.filter(
+        (r) => new Date(r.updated_at) <= new Date(filtres.dateFin)
+      );
+    }
+
+    // Tri
+    liste.sort((a, b) => {
+      const champ = tri.champ as string;
+      const va = (a as any)[champ] ?? "";
+      const vb = (b as any)[champ] ?? "";
+      const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+      return tri.direction === "asc" ? cmp : -cmp;
+    });
+
+    return liste;
+  }, [rapports, filtres, tri]);
+
+  // Pagination côté client
+  const rapportsPagines = useMemo(() => {
+    const debut = (page - 1) * taillePage;
+    return rapportsFiltres.slice(debut, debut + taillePage);
+  }, [rapportsFiltres, page, taillePage]);
+
+  const totalFiltres = rapportsFiltres.length;
+
+  // --- Stats ---
+  const stats = useMemo(() => ({
+    total: total,
+    avecTechnique: rapports.filter((r) => !!r.technical_report).length,
+    avecExecutif: rapports.filter((r) => !!r.executive_report).length,
+    organisations: new Set(rapports.map((r) => r.organization)).size,
+  }), [rapports, total]);
+
+  const typesUniques = useMemo(() => [...new Set(rapports.map((r) => r.type))], [rapports]);
+  const organisationsUniques = useMemo(() => [...new Set(rapports.map((r) => r.organization))], [rapports]);
+
   const handleTri = (champ: keyof Rapport) => {
     setTri((prev) => ({
       champ,
-      direction:
-        prev.champ === champ && prev.direction === "asc" ? "desc" : "asc",
+      direction: prev.champ === champ && prev.direction === "asc" ? "desc" : "asc",
     }));
   };
 
   const handleSelection = (id: string) => {
     setSelection((prev) => {
-      const nouveau = new Set(prev);
-      if (nouveau.has(id)) {
-        nouveau.delete(id);
-      } else {
-        nouveau.add(id);
-      }
-      return nouveau;
+      const n = new Set(prev);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
     });
   };
 
   const handleSelectionTout = () => {
-    if (selection.size === rapports.length) {
-      setSelection(new Set());
-    } else {
-      setSelection(new Set(rapports.map((r) => r.id)));
-    }
+    setSelection(
+      selection.size === rapportsPagines.length
+        ? new Set()
+        : new Set(rapportsPagines.map((r) => r.id))
+    );
   };
 
   const handleActionGroupee = (action: string) => {
-    // Actions sur les éléments sélectionnés
-    switch (action) {
-      case "supprimer":
-        if (window.confirm(`Supprimer ${selection.size} rapport(s) ?`)) {
-          // ⚠️ À ADAPTER : Appel API pour suppression multiple
-          console.log("Suppression de:", Array.from(selection));
-        }
-        break;
-      case "telecharger":
-        // Logique de téléchargement multiple
-        break;
-      case "exporter":
-        // Logique d'export
-        break;
+    if (action === "supprimer") {
+      if (window.confirm(`Supprimer ${selection.size} rapport(s) ?`)) {
+        console.log("Suppression de:", Array.from(selection));
+      }
     }
   };
 
   const handleActionRapport = (action: string, rapport: Rapport) => {
     switch (action) {
       case "voir":
-        window.open(`/rapports/${rapport.id}`, "_blank");
+        if (rapport.technical_report) window.open(rapport.technical_report, "_blank");
         break;
       case "telecharger":
-        // Logique de téléchargement
+        if (rapport.executive_report) window.open(rapport.executive_report, "_blank");
         break;
       case "partager":
-        // Logique de partage
-        break;
-      case "editer":
-        // Navigation vers édition
-        break;
-      case "dupliquer":
-        // Logique de duplication
+        navigator.clipboard?.writeText(rapport.technical_report ?? rapport.executive_report ?? "");
         break;
       case "imprimer":
         window.print();
@@ -353,28 +336,11 @@ const RapportsPage = () => {
     }
   };
 
-  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const SortIcon = ({ champ }: { champ: keyof Rapport }) =>
+    tri.champ === champ ? (
+      tri.direction === "asc" ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />
+    ) : null;
 
-    // ⚠️ À ADAPTER : Logique d'import
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const response = await fetch("VOTRE_API_IMPORT", {
-        method: "POST",
-        body: formData,
-      });
-      if (response.ok) {
-        fetchRapports(); // Rafraîchir la liste
-      }
-    } catch (err) {
-      console.error("Erreur import:", err);
-    }
-  };
-
-  // --- Rendu conditionnel ---
   if (loading && rapports.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
@@ -387,39 +353,21 @@ const RapportsPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-8">
-      {/* En-tête avancé */}
+      {/* En-tête */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            📈 Rapports Analytiques
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">📈 Rapports Analytiques</h1>
           <p className="text-gray-600 mt-2">
-            {total} rapport(s) • {(stats.totalTaille / 1024 / 1024).toFixed(2)}{" "}
-            MB total
+            {total} rapport(s) • {stats.organisations} organisation(s)
           </p>
         </div>
-
         <div className="flex flex-wrap gap-3">
-          <label className="cursor-pointer">
-            <input
-              type="file"
-              className="hidden"
-              onChange={handleImport}
-              accept=".pdf,.docx,.xlsx,.pptx"
-            />
-            <SweetButton className="border border-gray-300 text-gray-700 hover:bg-gray-50 flex items-center gap-2 px-4 py-2 rounded-lg">
-              <Upload className="w-4 h-4" />
-              Importer
-            </SweetButton>
-          </label>
-
           <SweetButton
             className="border border-gray-300 text-gray-700 hover:bg-gray-50 flex items-center gap-2 px-4 py-2 rounded-lg"
             onClick={() => setVue(vue === "tableau" ? "grille" : "tableau")}
           >
             {vue === "tableau" ? "Vue Grille" : "Vue Tableau"}
           </SweetButton>
-
           <SweetButton
             className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-2 px-4 py-2 rounded-lg"
             onClick={() => console.log("Nouveau rapport")}
@@ -430,31 +378,14 @@ const RapportsPage = () => {
         </div>
       </div>
 
-      {/* Statistiques détaillées */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        {Object.entries({
-          Total: { value: total, color: "bg-blue-500", icon: BarChart },
-          Publiés: {
-            value: stats.publies,
-            color: "bg-emerald-500",
-            icon: CheckCircle,
-          },
-          Brouillons: {
-            value: stats.brouillons,
-            color: "bg-amber-500",
-            icon: AlertCircle,
-          },
-          Archivés: {
-            value: stats.archives,
-            color: "bg-slate-600",
-            icon: Clock,
-          },
-          "En attente": {
-            value: stats.enAttente,
-            color: "bg-blue-400",
-            icon: Clock,
-          },
-        }).map(([label, { value, color, icon: Icon }]) => (
+      {/* Statistiques */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: "Total", value: stats.total, color: "bg-blue-500", icon: BarChart },
+          { label: "Rapport Technique", value: stats.avecTechnique, color: "bg-indigo-500", icon: Shield },
+          { label: "Rapport Exécutif", value: stats.avecExecutif, color: "bg-purple-500", icon: Briefcase },
+          { label: "Organisations", value: stats.organisations, color: "bg-emerald-500", icon: Building },
+        ].map(({ label, value, color, icon: Icon }) => (
           <div key={label} className="bg-white rounded-lg shadow border p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -469,31 +400,14 @@ const RapportsPage = () => {
         ))}
       </div>
 
-      {/* Barre d'actions avec sélection */}
+      {/* Actions groupées */}
       {selection.size > 0 && (
         <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-indigo-600" />
-              <span className="font-bold text-indigo-900">
-                {selection.size} élément(s) sélectionné(s)
-              </span>
-            </div>
+            <span className="font-bold text-indigo-900">
+              {selection.size} élément(s) sélectionné(s)
+            </span>
             <div className="flex gap-2">
-              <SweetButton
-                className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-1.5 text-sm rounded-lg flex items-center"
-                onClick={() => handleActionGroupee("telecharger")}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Télécharger
-              </SweetButton>
-              <SweetButton
-                className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-1.5 text-sm rounded-lg flex items-center"
-                onClick={() => handleActionGroupee("exporter")}
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Exporter
-              </SweetButton>
               <SweetButton
                 className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 text-sm rounded-lg flex items-center"
                 onClick={() => handleActionGroupee("supprimer")}
@@ -506,7 +420,7 @@ const RapportsPage = () => {
         </div>
       )}
 
-      {/* Filtres avancés */}
+      {/* Filtres */}
       <div className="bg-white rounded-xl shadow border p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
@@ -516,51 +430,43 @@ const RapportsPage = () => {
             </label>
             <input
               type="text"
-              placeholder="Rechercher dans les rapports..."
+              placeholder="Titre, type, organisation..."
               className="w-full px-4 py-2 border rounded-lg"
               value={filtres.recherche}
-              onChange={(e) =>
-                setFiltres({ ...filtres, recherche: e.target.value })
-              }
+              onChange={(e) => setFiltres({ ...filtres, recherche: e.target.value })}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <Filter className="inline w-4 h-4 mr-2" />
-              Statut
+              Type d'analyse
             </label>
             <select
               className="w-full px-4 py-2 border rounded-lg"
-              value={filtres.statut}
-              onChange={(e) =>
-                setFiltres({ ...filtres, statut: e.target.value })
-              }
+              value={filtres.categorie}
+              onChange={(e) => setFiltres({ ...filtres, categorie: e.target.value })}
             >
-              <option value="Tous">Tous les statuts</option>
-              <option value="Publié">Publié</option>
-              <option value="Brouillon">Brouillon</option>
-              <option value="Archivé">Archivé</option>
-              <option value="En attente">En attente</option>
+              <option value="Tous">Tous les types</option>
+              {typesUniques.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Catégorie
+              <Building className="inline w-4 h-4 mr-2" />
+              Organisation
             </label>
             <select
               className="w-full px-4 py-2 border rounded-lg"
-              value={filtres.categorie}
-              onChange={(e) =>
-                setFiltres({ ...filtres, categorie: e.target.value })
-              }
+              value={filtres.organisation}
+              onChange={(e) => setFiltres({ ...filtres, organisation: e.target.value })}
             >
-              <option value="Tous">Toutes catégories</option>
-              {categoriesUniques.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
+              <option value="">Toutes les organisations</option>
+              {organisationsUniques.map((o) => (
+                <option key={o} value={o}>{o}</option>
               ))}
             </select>
           </div>
@@ -568,33 +474,23 @@ const RapportsPage = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Date début
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Date début</label>
             <input
               type="date"
               className="w-full px-4 py-2 border rounded-lg"
               value={filtres.dateDebut}
-              onChange={(e) =>
-                setFiltres({ ...filtres, dateDebut: e.target.value })
-              }
+              onChange={(e) => setFiltres({ ...filtres, dateDebut: e.target.value })}
             />
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Date fin
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Date fin</label>
             <input
               type="date"
               className="w-full px-4 py-2 border rounded-lg"
               value={filtres.dateFin}
-              onChange={(e) =>
-                setFiltres({ ...filtres, dateFin: e.target.value })
-              }
+              onChange={(e) => setFiltres({ ...filtres, dateFin: e.target.value })}
             />
           </div>
-
           <div className="flex items-end">
             <SweetButton
               className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg"
@@ -604,7 +500,7 @@ const RapportsPage = () => {
                   categorie: "Tous",
                   dateDebut: "",
                   dateFin: "",
-                  auteurId: "",
+                  organisation: "",
                   recherche: "",
                 })
               }
@@ -615,20 +511,14 @@ const RapportsPage = () => {
         </div>
       </div>
 
-      {/* Affichage selon la vue */}
+      {/* Affichage */}
       {vue === "grille" ? (
-        // Vue grille
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {rapports.map((rapport) => (
-            <CarteRapport
-              key={rapport.id}
-              rapport={rapport}
-              onAction={handleActionRapport}
-            />
+          {rapportsPagines.map((rapport) => (
+            <CarteRapport key={rapport.id} rapport={rapport} onAction={handleActionRapport} />
           ))}
         </div>
       ) : (
-        // Vue tableau avancée
         <div className="bg-white rounded-xl shadow border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -637,75 +527,45 @@ const RapportsPage = () => {
                   <th className="px-6 py-3">
                     <input
                       type="checkbox"
-                      checked={selection.size === rapports.length}
+                      checked={
+                        rapportsPagines.length > 0 &&
+                        selection.size === rapportsPagines.length
+                      }
                       onChange={handleSelectionTout}
                       className="rounded border-gray-300"
                     />
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">
-                    <button
-                      className="flex items-center gap-1"
-                      onClick={() => handleTri("titre")}
+                  {(
+                    [
+                      { label: "Titre", champ: "title" },
+                      { label: "Type", champ: "type" },
+                      { label: "Organisation", champ: "organization" },
+                      { label: "Mis à jour", champ: "updated_at" },
+                      { label: "Rapports", champ: null },
+                      { label: "Actions", champ: null },
+                    ] as { label: string; champ: keyof Rapport | null }[]
+                  ).map(({ label, champ }) => (
+                    <th
+                      key={label}
+                      className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase"
                     >
-                      Titre
-                      {tri.champ === "titre" &&
-                        (tri.direction === "asc" ? (
-                          <SortAsc className="w-4 h-4" />
-                        ) : (
-                          <SortDesc className="w-4 h-4" />
-                        ))}
-                    </button>
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">
-                    <button
-                      className="flex items-center gap-1"
-                      onClick={() => handleTri("categorie")}
-                    >
-                      Catégorie
-                      {tri.champ === "categorie" &&
-                        (tri.direction === "asc" ? (
-                          <SortAsc className="w-4 h-4" />
-                        ) : (
-                          <SortDesc className="w-4 h-4" />
-                        ))}
-                    </button>
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">
-                    <button
-                      className="flex items-center gap-1"
-                      onClick={() => handleTri("statut")}
-                    >
-                      Statut
-                      {tri.champ === "statut" &&
-                        (tri.direction === "asc" ? (
-                          <SortAsc className="w-4 h-4" />
-                        ) : (
-                          <SortDesc className="w-4 h-4" />
-                        ))}
-                    </button>
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">
-                    <button
-                      className="flex items-center gap-1"
-                      onClick={() => handleTri("dateModification")}
-                    >
-                      Dernière modification
-                      {tri.champ === "dateModification" &&
-                        (tri.direction === "asc" ? (
-                          <SortAsc className="w-4 h-4" />
-                        ) : (
-                          <SortDesc className="w-4 h-4" />
-                        ))}
-                    </button>
-                  </th>
-
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">
-                    Actions
-                  </th>
+                      {champ ? (
+                        <button
+                          className="flex items-center gap-1"
+                          onClick={() => handleTri(champ)}
+                        >
+                          {label}
+                          <SortIcon champ={champ} />
+                        </button>
+                      ) : (
+                        label
+                      )}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {rapports.map((rapport) => (
+                {rapportsPagines.map((rapport) => (
                   <tr key={rapport.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <input
@@ -716,86 +576,37 @@ const RapportsPage = () => {
                       />
                     </td>
                     <td className="px-6 py-4">
-                      <div>
-                        <div className="font-bold text-gray-900">
-                          {rapport.title}
-                        </div>
-                        <div className="text-sm text-gray-600 mt-1">
-                          {rapport.type}
-                        </div>
-                        <div className="flex items-center mt-2 text-sm text-gray-500">
-                          <Building className="w-3 h-3 mr-1" />
-                          {rapport.organization}
-                        </div>
+                      <div className="font-bold text-gray-900">{rapport.title}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <BadgeType type={rapport.type} />
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center text-sm text-gray-700">
+                        <Building className="w-3.5 h-3.5 mr-1.5 text-gray-400" />
+                        {rapport.organization}
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <BadgeCategorie
-                        categorie={rapport?.categorie || "Autre"}
-                      />
-                    </td>
-                    <td className="px-6 py-4">
-                      <BadgeStatut statut={rapport?.statut || "Archivé"} />
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm">
-                        <div className="font-medium text-gray-900">
-                          {rapport?.last_updated}
-                        </div>
-                        <div className="text-gray-500">
-                          {rapport?.last_updated}
-                        </div>
+                      <div className="text-sm text-gray-600">
+                        {formatDate(rapport.updated_at)}
                       </div>
                     </td>
-
+                    <td className="px-6 py-4">
+                      <RapportLinks rapport={rapport} />
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex gap-1">
                         <SweetButton
                           className="bg-transparent text-gray-700 hover:bg-gray-100 px-2 py-1.5 rounded"
-                          onClick={() => handleActionRapport("voir", rapport)}
-                          title="Voir"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </SweetButton>
-                        <SweetButton
-                          className="bg-transparent text-gray-700 hover:bg-gray-100 px-2 py-1.5 rounded"
-                          onClick={() =>
-                            handleActionRapport("telecharger", rapport)
-                          }
-                          title="Télécharger"
-                        >
-                          <Download className="w-4 h-4" />
-                        </SweetButton>
-                        <SweetButton
-                          className="bg-transparent text-gray-700 hover:bg-gray-100 px-2 py-1.5 rounded"
-                          onClick={() =>
-                            handleActionRapport("partager", rapport)
-                          }
+                          onClick={() => handleActionRapport("partager", rapport)}
                           title="Partager"
                         >
                           <Share2 className="w-4 h-4" />
                         </SweetButton>
                         <SweetButton
                           className="bg-transparent text-gray-700 hover:bg-gray-100 px-2 py-1.5 rounded"
-                          onClick={() => handleActionRapport("editer", rapport)}
-                          title="Éditer"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </SweetButton>
-                        <SweetButton
-                          className="bg-transparent text-gray-700 hover:bg-gray-100 px-2 py-1.5 rounded"
-                          onClick={() =>
-                            handleActionRapport("dupliquer", rapport)
-                          }
-                          title="Dupliquer"
-                        >
-                          <Copy className="w-4 h-4" />
-                        </SweetButton>
-                        <SweetButton
-                          className="bg-transparent text-gray-700 hover:bg-gray-100 px-2 py-1.5 rounded"
-                          onClick={() =>
-                            handleActionRapport("imprimer", rapport)
-                          }
+                          onClick={() => handleActionRapport("imprimer", rapport)}
                           title="Imprimer"
                         >
                           <Printer className="w-4 h-4" />
@@ -810,60 +621,41 @@ const RapportsPage = () => {
         </div>
       )}
 
-      {/* Pagination avancée */}
-      {rapports.length > 0 && (
+      {/* Pagination */}
+      {totalFiltres > 0 && (
         <div className="flex flex-col sm:flex-row justify-between items-center bg-white rounded-lg shadow border p-4">
           <div className="text-gray-700 mb-4 sm:mb-0">
             Affichage de{" "}
             <span className="font-bold">{(page - 1) * taillePage + 1}</span> à{" "}
-            <span className="font-bold">
-              {Math.min(page * taillePage, total)}
-            </span>{" "}
-            sur <span className="font-bold">{total}</span> rapports
+            <span className="font-bold">{Math.min(page * taillePage, totalFiltres)}</span>{" "}
+            sur <span className="font-bold">{totalFiltres}</span> rapports
           </div>
-
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">Par page:</span>
               <select
                 className="border rounded px-2 py-1"
                 value={taillePage}
-                onChange={(e) => setTaillePage(Number(e.target.value))}
+                onChange={(e) => { setTaillePage(Number(e.target.value)); setPage(1); }}
               >
-                {[10, 20, 50, 100].map((size) => (
-                  <option key={size} value={size}>
-                    {size}
-                  </option>
+                {[10, 20, 50, 100].map((s) => (
+                  <option key={s} value={s}>{s}</option>
                 ))}
               </select>
             </div>
-
             <div className="flex gap-2">
               <SweetButton
-                className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-1.5 rounded disabled:opacity-40 disabled:cursor-not-allowed"
+                className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-1.5 rounded disabled:opacity-40"
                 disabled={page === 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
                 <ChevronLeft className="w-4 h-4" />
               </SweetButton>
-
-              {Array.from(
-                { length: Math.ceil(total / taillePage) },
-                (_, i) => i + 1,
-              )
-                .filter(
-                  (p) =>
-                    p === 1 ||
-                    p === page ||
-                    p === page - 1 ||
-                    p === page + 1 ||
-                    p === Math.ceil(total / taillePage),
-                )
+              {Array.from({ length: Math.ceil(totalFiltres / taillePage) }, (_, i) => i + 1)
+                .filter((p) => p === 1 || p === page || p === page - 1 || p === page + 1 || p === Math.ceil(totalFiltres / taillePage))
                 .map((p, i, arr) => (
                   <div key={p} className="flex items-center">
-                    {i > 0 && arr[i - 1] !== p - 1 && (
-                      <span className="px-2">...</span>
-                    )}
+                    {i > 0 && arr[i - 1] !== p - 1 && <span className="px-2">...</span>}
                     <SweetButton
                       className={`min-w-[40px] px-3 py-1.5 rounded ${
                         p === page
@@ -876,13 +668,10 @@ const RapportsPage = () => {
                     </SweetButton>
                   </div>
                 ))}
-
               <SweetButton
-                className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-1.5 rounded disabled:opacity-40 disabled:cursor-not-allowed"
-                disabled={page === Math.ceil(total / taillePage)}
-                onClick={() =>
-                  setPage((p) => Math.min(Math.ceil(total / taillePage), p + 1))
-                }
+                className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-1.5 rounded disabled:opacity-40"
+                disabled={page === Math.ceil(totalFiltres / taillePage)}
+                onClick={() => setPage((p) => Math.min(Math.ceil(totalFiltres / taillePage), p + 1))}
               >
                 <ChevronRight className="w-4 h-4" />
               </SweetButton>
@@ -892,47 +681,27 @@ const RapportsPage = () => {
       )}
 
       {/* État vide */}
-      {rapports.length === 0 && !loading && (
+      {rapportsFiltres.length === 0 && !loading && (
         <div className="text-center py-16 bg-white rounded-xl shadow border">
           <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-2xl font-bold text-gray-700 mb-3">
-            Aucun rapport trouvé
-          </h3>
+          <h3 className="text-2xl font-bold text-gray-700 mb-3">Aucun rapport trouvé</h3>
           <p className="text-gray-600 max-w-md mx-auto mb-8">
-            {filtres.recherche ||
-            filtres.statut !== "Tous" ||
-            filtres.categorie !== "Tous"
+            {filtres.recherche || filtres.statut !== "Tous" || filtres.organisation
               ? "Aucun rapport ne correspond à vos critères de recherche."
-              : "Commencez par créer votre premier rapport pour le voir apparaître ici."}
+              : "Commencez par créer votre premier rapport."}
           </p>
-          <div className="flex gap-3 justify-center">
-            <SweetButton
-              className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg"
-              onClick={() =>
-                setFiltres({
-                  statut: "Tous",
-                  categorie: "Tous",
-                  dateDebut: "",
-                  dateFin: "",
-                  auteurId: "",
-                  recherche: "",
-                })
-              }
-            >
-              Réinitialiser les filtres
-            </SweetButton>
-            <SweetButton
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg"
-              onClick={() => console.log("Créer un rapport")}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Créer un rapport
-            </SweetButton>
-          </div>
+          <SweetButton
+            className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg"
+            onClick={() =>
+              setFiltres({ statut: "Tous", categorie: "Tous", dateDebut: "", dateFin: "", organisation: "", recherche: "" })
+            }
+          >
+            Réinitialiser les filtres
+          </SweetButton>
         </div>
       )}
 
-      {/* Gestion des erreurs */}
+      {/* Erreur */}
       {error && (
         <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg">
           <div className="flex items-center">

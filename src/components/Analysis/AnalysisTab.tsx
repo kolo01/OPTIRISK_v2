@@ -18,7 +18,6 @@ import Atelier2 from "./Atelier2";
 import Atelier3 from "./Atelier3";
 import Atelier4 from "./Atelier4";
 import Atelier5 from "./Atelier5";
-import RapportExecutif from "./RapportExecutif";
 import { objectifsVisesParDefaut } from "../../data/sourcesRisqueData";
 import analysisService from "../../services/analysisService";
 import { useNavigate } from "react-router-dom";
@@ -282,8 +281,8 @@ const AnalysisTab: React.FC = () => {
         analysisData.workshop5,
         currentWorkshop,
       );
-      addNotification(`Atelier 5 terminé. Génération du rapport exécutif...`, "success");
-      setCurrentWorkshop(6);
+      addNotification(`Atelier 5 terminé. Analyse complète!`, "success");
+      navigate("/analysis");
     }
   };
   const handlePrevious = () => {
@@ -393,8 +392,6 @@ const AnalysisTab: React.FC = () => {
         return (
           <Atelier5 {...props} onNavigateToReports={onNavigateToReports} />
         );
-      case 6:
-        return <RapportExecutif analysisData={analysisData} />;
       default:
         return <></>;
     }
@@ -836,19 +833,18 @@ const AnalysisTab: React.FC = () => {
 
               <div className="flex items-center space-x-3">
                 <span className="text-sm text-slate-400">
-                  {currentWorkshop === 6 ? 'Rapport Exécutif' : `Atelier ${currentWorkshop}/5`}
+                  Atelier {currentWorkshop}/5
                 </span>
-                {currentWorkshop < 6 && (
-                  <button
-                    onClick={handleNext}
-                    className="btn-primary flex items-center space-x-2"
-                  >
-                    <span>
-                      {currentWorkshop === 5 ? "Rapport Exécutif" : "Atelier suivant"}
-                    </span>
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                )}
+                <button
+                  onClick={handleNext}
+                  disabled={currentWorkshop > 6}
+                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  <span>
+                    {currentWorkshop === 5 ? "Terminer" : "Atelier suivant"}
+                  </span>
+                  {currentWorkshop < 5 && <ChevronRight className="w-4 h-4" />}
+                </button>
               </div>
             </div>
           </div>

@@ -12,11 +12,8 @@ apiClient.interceptors.request.use(
     try {
       const tokenData = localStorage.getItem('token');
       const exceptUrl = ['/login/','/login','login/']
-      console.log(config.url)
       if (tokenData && config.url && !exceptUrl.includes(config.url)) {
-        console.log('TOKEN DATA:', tokenData);
         const token = JSON.parse(tokenData);
-        console.log('PARSED TOKEN:', token);
         if (token?.access) {
           config.headers['Authorization'] = `Bearer ${token.access}`;
         }

@@ -58,19 +58,6 @@ const UserTable: React.FC<UserTableProps> = ({
     }
   };
 
-  const getRoleBadge = (role?: UserRole) => {
-    switch (role) {
-      case 'SUPER_ADMIN':
-        return <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">Super Admin</span>;
-      case 'ADMIN':
-        return <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">Admin</span>;
-      case 'USER':
-        return <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">User</span>;
-      default:
-        return null;
-    }
-  };
-
   return (
     <div className="bg-white rounded-lg border border-gray-200">
       <div className="overflow-x-auto">
@@ -93,11 +80,6 @@ const UserTable: React.FC<UserTableProps> = ({
               {showAnalyses && (
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Analyses
-                </th>
-              )}
-              {showRole && (
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Rôle
                 </th>
               )}
               {showStatus && (
@@ -144,11 +126,6 @@ const UserTable: React.FC<UserTableProps> = ({
                       <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
                         {user.analyses_number || 0}
                       </span>
-                    </td>
-                  )}
-                  {showRole && (
-                    <td className="px-6 py-4">
-                      {getRoleBadge(user.role)}
                     </td>
                   )}
                   {showStatus && (
